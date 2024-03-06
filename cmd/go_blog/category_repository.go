@@ -19,7 +19,7 @@ type CategoryRepository interface {
 type CategoryRepositoryImpl struct {
 }
 
-func (a *CategoryRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, category Category) Category {
+func (repository *CategoryRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, category Category) Category {
 	ctxC, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -38,7 +38,7 @@ func (a *CategoryRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, category 
 	return category
 }
 
-func (a *CategoryRepositoryImpl) FindAll(ctx context.Context, tx *sql.Tx) []Category {
+func (repository *CategoryRepositoryImpl) FindAll(ctx context.Context, tx *sql.Tx) []Category {
 	ctxC, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -65,7 +65,7 @@ func (a *CategoryRepositoryImpl) FindAll(ctx context.Context, tx *sql.Tx) []Cate
 	return categories
 }
 
-func (a *CategoryRepositoryImpl) FindById(ctx context.Context, tx *sql.Tx, categoryId int) (Category, error) {
+func (repository *CategoryRepositoryImpl) FindById(ctx context.Context, tx *sql.Tx, categoryId int) (Category, error) {
 	ctxC, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -90,7 +90,7 @@ func (a *CategoryRepositoryImpl) FindById(ctx context.Context, tx *sql.Tx, categ
 	}
 }
 
-func (a *CategoryRepositoryImpl) Update(ctx context.Context, tx *sql.Tx, category Category) Category {
+func (repository *CategoryRepositoryImpl) Update(ctx context.Context, tx *sql.Tx, category Category) Category {
 	ctxC, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -111,7 +111,7 @@ func (a *CategoryRepositoryImpl) Update(ctx context.Context, tx *sql.Tx, categor
 	return category
 }
 
-func (a *CategoryRepositoryImpl) Delete(ctx context.Context, tx *sql.Tx, categoryId int) {
+func (repository *CategoryRepositoryImpl) Delete(ctx context.Context, tx *sql.Tx, categoryId int) {
 	ctxC, cancel := context.WithCancel(ctx)
 	defer cancel()
 
