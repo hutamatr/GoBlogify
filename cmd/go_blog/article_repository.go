@@ -19,7 +19,7 @@ type ArticleRepository interface {
 type ArticleRepositoryImpl struct {
 }
 
-func (a *ArticleRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, article Article) Article {
+func (repository *ArticleRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, article Article) Article {
 	ctxC, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -38,7 +38,7 @@ func (a *ArticleRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, article Ar
 	return article
 }
 
-func (a *ArticleRepositoryImpl) FindAll(ctx context.Context, tx *sql.Tx) []Article {
+func (repository *ArticleRepositoryImpl) FindAll(ctx context.Context, tx *sql.Tx) []Article {
 	ctxC, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -65,7 +65,7 @@ func (a *ArticleRepositoryImpl) FindAll(ctx context.Context, tx *sql.Tx) []Artic
 	return articles
 }
 
-func (a *ArticleRepositoryImpl) FindById(ctx context.Context, tx *sql.Tx, articleId int) (Article, error) {
+func (repository *ArticleRepositoryImpl) FindById(ctx context.Context, tx *sql.Tx, articleId int) (Article, error) {
 	ctxC, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -90,13 +90,13 @@ func (a *ArticleRepositoryImpl) FindById(ctx context.Context, tx *sql.Tx, articl
 	}
 }
 
-func (a *ArticleRepositoryImpl) Update(ctx context.Context, tx *sql.Tx, article Article) Article {
+func (repository *ArticleRepositoryImpl) Update(ctx context.Context, tx *sql.Tx, article Article) Article {
 	ctxC, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	query := "UPDATE article SET title = ?, body = ?, author = ?, published = ?, category = ? WHERE id = ?"
+	query := "UPDATE article SET title = ?, body = ?, author = ?, category = ?, published = ?, deleted = ? WHERE id = ?"
 
-	result, err := tx.ExecContext(ctxC, query, article.Title, article.Body, article.Author, article.Published, article.Category, article.Id)
+	result, err := tx.ExecContext(ctxC, query, article.Title, article.Body, article.Author, article.Category, article.Published, article.Deleted, article.Id)
 
 	helper.PanicError(err)
 
@@ -111,7 +111,7 @@ func (a *ArticleRepositoryImpl) Update(ctx context.Context, tx *sql.Tx, article 
 	return article
 }
 
-func (a *ArticleRepositoryImpl) Delete(ctx context.Context, tx *sql.Tx, articleId int) {
+func (repository *ArticleRepositoryImpl) Delete(ctx context.Context, tx *sql.Tx, articleId int) {
 	ctxC, cancel := context.WithCancel(ctx)
 	defer cancel()
 

@@ -1,19 +1,23 @@
 package go_blog
 
+import "time"
+
 type Article struct {
 	Id         int
 	Title      string
 	Body       string
 	Author     string
-	Created_At string
-	Updated_At string
-	Deleted_At string
-	Deleted    bool
-	Published  bool
 	Category   string
+	Published  bool
+	Deleted    bool
+	Created_At time.Time
+	Updated_At time.Time
+	Deleted_At time.Time
 }
 
 type Category struct {
 	Id   int
 	Name string
+	Created_At time.Time
+	Updated_At time.Time
 }

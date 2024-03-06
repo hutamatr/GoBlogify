@@ -14,5 +14,6 @@ type ArticleUpdateRequest struct {
 	Body      string `json:"body" validate:"required,min=1,max=1000"`
 	Author    string `json:"author" validate:"required,min=1,max=100"`
 	Published bool   `json:"published" validate:"required"`
+	Deleted   bool   `json:"deleted" validate:"required"`
 	Category  string `json:"category" validate:"required,min=1,max=100"`
 }
