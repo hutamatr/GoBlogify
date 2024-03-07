@@ -31,11 +31,11 @@ func (service *ArticleServiceImpl) Create(ctx context.Context, article ArticleCr
 	defer helper.TxRollbackCommit(tx)
 
 	newArticle := Article{
-		Title:     article.Title,
-		Body:      article.Body,
-		Author:    article.Author,
-		Published: article.Published,
-		Category:  article.Category,
+		Title:      article.Title,
+		Body:       article.Body,
+		Author:     article.Author,
+		Published:  article.Published,
+		CategoryId: article.CategoryId,
 	}
 
 	createdArticle := service.repository.Save(ctx, tx, newArticle)
@@ -87,7 +87,7 @@ func (service *ArticleServiceImpl) Update(ctx context.Context, article ArticleUp
 	articleData.Title = article.Title
 	articleData.Body = article.Body
 	articleData.Author = article.Author
-	articleData.Category = article.Category
+	articleData.CategoryId = article.CategoryId
 	articleData.Published = article.Published
 	articleData.Deleted = article.Deleted
 

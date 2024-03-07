@@ -7,7 +7,7 @@ type Article struct {
 	Title      string
 	Body       string
 	Author     string
-	Category   string
+	CategoryId int
 	Published  bool
 	Deleted    bool
 	Created_At time.Time
@@ -16,8 +16,8 @@ type Article struct {
 }
 
 type Category struct {
-	Id   int
-	Name string
+	Id         int
+	Name       string
 	Created_At time.Time
 	Updated_At time.Time
 }
