@@ -442,9 +442,9 @@
             "type": "boolean",
             "example": true
           },
-          "category": {
-            "type": "string",
-            "example": "Category Name"
+          "category_id": {
+            "type": "integer",
+            "example": 1
           }
         }
       },
@@ -496,9 +496,9 @@
             "type": "boolean",
             "example": true
           },
-          "category": {
-            "type": "string",
-            "example": "Category"
+          "category_id": {
+            "type": "integer",
+            "example": 1
           }
         }
       },

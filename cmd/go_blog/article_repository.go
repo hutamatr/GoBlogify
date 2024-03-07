@@ -3,7 +3,6 @@ package go_blog
 import (
 	"context"
 	"database/sql"
-	"errors"
 
 	"github.com/hutamatr/go-blog-api/cmd/go_blog/helper"
 )
@@ -23,9 +22,9 @@ func (repository *ArticleRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, a
 	ctxC, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	query := "INSERT INTO article(title, body, author, published, category) VALUES(?, ?, ?, ?, ?)"
+	query := "INSERT INTO article(title, body, author, published, category_id) VALUES(?, ?, ?, ?, ?)"
 
-	result, err := tx.ExecContext(ctxC, query, article.Title, article.Body, article.Author, article.Published, article.Category)
+	result, err := tx.ExecContext(ctxC, query, article.Title, article.Body, article.Author, article.Published, article.CategoryId)
 
 	helper.PanicError(err)
 
@@ -42,7 +41,7 @@ func (repository *ArticleRepositoryImpl) FindAll(ctx context.Context, tx *sql.Tx
 	ctxC, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	query := "SELECT id, title, body, author, created_at, updated_at, deleted_at, deleted, published, category FROM article"
+	query := "SELECT id, title, body, author, created_at, updated_at, deleted_at, deleted, published, category_id FROM article"
 
 	rows, err := tx.QueryContext(ctxC, query)
 
@@ -55,7 +54,7 @@ func (repository *ArticleRepositoryImpl) FindAll(ctx context.Context, tx *sql.Tx
 	for rows.Next() {
 		article := Article{}
 
-		err := rows.Scan(&article.Id, &article.Title, &article.Body, &article.Author, &article.Created_At, &article.Updated_At, &article.Deleted_At, &article.Deleted, &article.Published, &article.Category)
+		err := rows.Scan(&article.Id, &article.Title, &article.Body, &article.Author, &article.Created_At, &article.Updated_At, &article.Deleted_At, &article.Deleted, &article.Published, &article.CategoryId)
 
 		helper.PanicError(err)
 
@@ -69,7 +68,7 @@ func (repository *ArticleRepositoryImpl) FindById(ctx context.Context, tx *sql.T
 	ctxC, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	query := "SELECT id, title, body, author, created_at, updated_at, deleted_at, deleted, published, category FROM article WHERE id = ? LIMIT = 1"
+	query := "SELECT id, title, body, author, created_at, updated_at, deleted_at, deleted, published, category_id FROM article WHERE id = ? LIMIT = 1"
 
 	rows, err := tx.QueryContext(ctxC, query, articleId)
 
@@ -80,13 +79,13 @@ func (repository *ArticleRepositoryImpl) FindById(ctx context.Context, tx *sql.T
 	article := Article{}
 
 	if rows.Next() {
-		err := rows.Scan(&article.Id, &article.Title, &article.Body, &article.Author, &article.Created_At, &article.Updated_At, &article.Deleted_At, &article.Deleted, &article.Published, &article.Category)
+		err := rows.Scan(&article.Id, &article.Title, &article.Body, &article.Author, &article.Created_At, &article.Updated_At, &article.Deleted_At, &article.Deleted, &article.Published, &article.CategoryId)
 
 		helper.PanicError(err)
 
 		return article, nil
 	} else {
-		return article, errors.New("article not found")
+		return article, helper.NotFoundError
 	}
 }
 
@@ -94,9 +93,9 @@ func (repository *ArticleRepositoryImpl) Update(ctx context.Context, tx *sql.Tx,
 	ctxC, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	query := "UPDATE article SET title = ?, body = ?, author = ?, category = ?, published = ?, deleted = ? WHERE id = ?"
+	query := "UPDATE article SET title = ?, body = ?, author = ?, category_id = ?, published = ?, deleted = ? WHERE id = ?"
 
-	result, err := tx.ExecContext(ctxC, query, article.Title, article.Body, article.Author, article.Category, article.Published, article.Deleted, article.Id)
+	result, err := tx.ExecContext(ctxC, query, article.Title, article.Body, article.Author, article.CategoryId, article.Published, article.Deleted, article.Id)
 
 	helper.PanicError(err)
 
@@ -105,7 +104,7 @@ func (repository *ArticleRepositoryImpl) Update(ctx context.Context, tx *sql.Tx,
 	helper.PanicError(err)
 
 	if resultRows == 0 {
-		panic(errors.New("article not found"))
+		panic(helper.NotFoundError)
 	}
 
 	return article
@@ -126,6 +125,6 @@ func (repository *ArticleRepositoryImpl) Delete(ctx context.Context, tx *sql.Tx,
 	helper.PanicError(err)
 
 	if resultRows == 0 {
-		panic(errors.New("article not found"))
+		panic(helper.NotFoundError)
 	}
 }

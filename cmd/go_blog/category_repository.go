@@ -3,7 +3,6 @@ package go_blog
 import (
 	"context"
 	"database/sql"
-	"errors"
 
 	"github.com/hutamatr/go-blog-api/cmd/go_blog/helper"
 )
@@ -86,7 +85,7 @@ func (repository *CategoryRepositoryImpl) FindById(ctx context.Context, tx *sql.
 
 		return category, nil
 	} else {
-		return category, errors.New("category not found")
+		return category, helper.NotFoundError
 	}
 }
 
@@ -105,7 +104,7 @@ func (repository *CategoryRepositoryImpl) Update(ctx context.Context, tx *sql.Tx
 	helper.PanicError(err)
 
 	if resultRows == 0 {
-		panic(errors.New("category not found"))
+		panic(helper.NotFoundError)
 	}
 
 	return category
@@ -126,6 +125,6 @@ func (repository *CategoryRepositoryImpl) Delete(ctx context.Context, tx *sql.Tx
 	helper.PanicError(err)
 
 	if resultRows == 0 {
-		panic(errors.New("category not found"))
+		panic(helper.NotFoundError)
 	}
 }
