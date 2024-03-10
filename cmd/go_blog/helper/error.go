@@ -1,6 +1,8 @@
 package helper
 
-import "errors"
+import (
+	"errors"
+)
 
 var (
 	ValidationError = errors.New("validation error")
