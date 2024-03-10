@@ -19,7 +19,15 @@ type CategoryService interface {
 type CategoryServiceImpl struct {
 	repository CategoryRepository
 	db         *sql.DB
-	validator  validator.Validate
+	validator  *validator.Validate
+}
+
+func NewCategoryService(categoryRepository CategoryRepository, db *sql.DB, validator *validator.Validate) CategoryService {
+	return &CategoryServiceImpl{
+		repository: categoryRepository,
+		db:         db,
+		validator:  validator,
+	}
 }
 
 func (service *CategoryServiceImpl) Create(ctx context.Context, category CategoryCreateRequest) CategoryResponse {

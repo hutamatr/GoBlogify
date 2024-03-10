@@ -20,6 +20,12 @@ type ArticleControllerImpl struct {
 	service ArticleService
 }
 
+func NewArticleController(articleService ArticleService) ArticleController {
+	return &ArticleControllerImpl{
+		service: articleService,
+	}
+}
+
 func (controller *ArticleControllerImpl) CreateArticle(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	articleRequest := ArticleCreateRequest{}
 	helper.DecodeJSONFromRequest(request, &articleRequest)
@@ -65,7 +71,15 @@ func (controller *ArticleControllerImpl) FindByIdArticle(writer http.ResponseWri
 }
 
 func (controller *ArticleControllerImpl) UpdateArticle(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+
+	id := params.ByName("articleId")
+	articleId, err := strconv.Atoi(id)
+
+	helper.PanicError(err)
+
 	articleUpdateRequest := ArticleUpdateRequest{}
+
+	articleUpdateRequest.Id = articleId
 
 	helper.DecodeJSONFromRequest(request, &articleUpdateRequest)
 

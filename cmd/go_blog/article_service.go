@@ -19,7 +19,15 @@ type ArticleService interface {
 type ArticleServiceImpl struct {
 	repository ArticleRepository
 	db         *sql.DB
-	validator  validator.Validate
+	validator  *validator.Validate
+}
+
+func NewArticleService(articleRepository ArticleRepository, db *sql.DB, validator *validator.Validate) ArticleService {
+	return &ArticleServiceImpl{
+		repository: articleRepository,
+		db:         db,
+		validator:  validator,
+	}
 }
 
 func (service *ArticleServiceImpl) Create(ctx context.Context, article ArticleCreateRequest) ArticleResponse {
@@ -30,12 +38,12 @@ func (service *ArticleServiceImpl) Create(ctx context.Context, article ArticleCr
 	helper.PanicError(err)
 	defer helper.TxRollbackCommit(tx)
 
-	newArticle := Article{
-		Title:      article.Title,
-		Body:       article.Body,
-		Author:     article.Author,
-		Published:  article.Published,
-		CategoryId: article.CategoryId,
+	newArticle := ArticleCreateRequest{
+		Title:       article.Title,
+		Body:        article.Body,
+		Author:      article.Author,
+		Published:   article.Published,
+		Category_Id: article.Category_Id,
 	}
 
 	createdArticle := service.repository.Save(ctx, tx, newArticle)
@@ -44,7 +52,6 @@ func (service *ArticleServiceImpl) Create(ctx context.Context, article ArticleCr
 }
 
 func (service *ArticleServiceImpl) FindAll(ctx context.Context) []ArticleResponse {
-
 	tx, err := service.db.Begin()
 	helper.PanicError(err)
 	defer helper.TxRollbackCommit(tx)
@@ -81,19 +88,29 @@ func (service *ArticleServiceImpl) Update(ctx context.Context, article ArticleUp
 	helper.PanicError(err)
 	defer helper.TxRollbackCommit(tx)
 
-	articleData, err := service.repository.FindById(ctx, tx, article.Id)
+	_, err = service.repository.FindById(ctx, tx, article.Id)
 	helper.PanicError(err)
 
-	articleData.Title = article.Title
-	articleData.Body = article.Body
-	articleData.Author = article.Author
-	articleData.CategoryId = article.CategoryId
-	articleData.Published = article.Published
-	articleData.Deleted = article.Deleted
+	updateArticleData := ArticleUpdateRequest{
+		Id:          article.Id,
+		Title:       article.Title,
+		Body:        article.Body,
+		Author:      article.Author,
+		Category_Id: article.Category_Id,
+		Published:   article.Published,
+		Deleted:     article.Deleted,
+	}
 
-	updatedArticle := service.repository.Update(ctx, tx, articleData)
+	// articleData.Title = article.Title
+	// articleData.Body = article.Body
+	// articleData.Author = article.Author
+	// articleData.Category_Id = article.Category_Id
+	// articleData.Published = article.Published
+	// articleData.Deleted = article.Deleted
 
-	return ArticleResponse(updatedArticle)
+	updatedArticle := service.repository.Update(ctx, tx, updateArticleData)
+
+	return updatedArticle
 }
 
 func (service *ArticleServiceImpl) Delete(ctx context.Context, articleId int) {

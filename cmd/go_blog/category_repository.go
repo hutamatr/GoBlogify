@@ -18,13 +18,17 @@ type CategoryRepository interface {
 type CategoryRepositoryImpl struct {
 }
 
+func NewCategoryRepository() CategoryRepository {
+	return &CategoryRepositoryImpl{}
+}
+
 func (repository *CategoryRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, category Category) Category {
 	ctxC, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	query := "INSERT INTO article(name) VALUES(?)"
+	queryInsert := "INSERT INTO category(name) VALUES(?)"
 
-	result, err := tx.ExecContext(ctxC, query, category.Name)
+	result, err := tx.ExecContext(ctxC, queryInsert, category.Name)
 
 	helper.PanicError(err)
 
@@ -32,16 +36,29 @@ func (repository *CategoryRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, 
 
 	helper.PanicError(err)
 
-	category.Id = int(id)
+	querySelect := "SELECT id, name, created_at, updated_at FROM category WHERE id = ?"
 
-	return category
+	rows, err := tx.QueryContext(ctxC, querySelect, id)
+
+	helper.PanicError(err)
+
+	defer rows.Close()
+
+	createdCategory := Category{}
+
+	if rows.Next() {
+		err := rows.Scan(&createdCategory.Id, &createdCategory.Name, &createdCategory.Created_At, &createdCategory.Updated_At)
+		helper.PanicError(err)
+	}
+
+	return createdCategory
 }
 
 func (repository *CategoryRepositoryImpl) FindAll(ctx context.Context, tx *sql.Tx) []Category {
 	ctxC, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	query := "SELECT id, name FROM category"
+	query := "SELECT id, name, created_at, updated_at FROM category"
 
 	rows, err := tx.QueryContext(ctxC, query)
 
@@ -54,7 +71,7 @@ func (repository *CategoryRepositoryImpl) FindAll(ctx context.Context, tx *sql.T
 	for rows.Next() {
 		category := Category{}
 
-		err := rows.Scan(&category.Id, &category.Name)
+		err := rows.Scan(&category.Id, &category.Name, &category.Created_At, &category.Updated_At)
 
 		helper.PanicError(err)
 
@@ -68,7 +85,7 @@ func (repository *CategoryRepositoryImpl) FindById(ctx context.Context, tx *sql.
 	ctxC, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	query := "SELECT id, name FROM category WHERE id = ? LIMIT = 1"
+	query := "SELECT id, name, created_at, updated_at FROM category WHERE id = ?"
 
 	rows, err := tx.QueryContext(ctxC, query, categoryId)
 
@@ -79,7 +96,7 @@ func (repository *CategoryRepositoryImpl) FindById(ctx context.Context, tx *sql.
 	category := Category{}
 
 	if rows.Next() {
-		err := rows.Scan(&category.Id, &category.Name)
+		err := rows.Scan(&category.Id, &category.Name, &category.Created_At, &category.Updated_At)
 
 		helper.PanicError(err)
 
