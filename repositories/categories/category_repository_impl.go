@@ -1,19 +1,14 @@
-package go_blog
+package repositories
 
 import (
 	"context"
 	"database/sql"
+	"log"
 
-	"github.com/hutamatr/go-blog-api/cmd/go_blog/helper"
+	"github.com/hutamatr/go-blog-api/exception"
+	"github.com/hutamatr/go-blog-api/helpers"
+	"github.com/hutamatr/go-blog-api/model/domain"
 )
-
-type CategoryRepository interface {
-	Save(ctx context.Context, tx *sql.Tx, category Category) Category
-	FindAll(ctx context.Context, tx *sql.Tx) []Category
-	FindById(ctx context.Context, tx *sql.Tx, categoryId int) (Category, error)
-	Update(ctx context.Context, tx *sql.Tx, category Category) Category
-	Delete(ctx context.Context, tx *sql.Tx, categoryId int)
-}
 
 type CategoryRepositoryImpl struct {
 }
@@ -22,7 +17,7 @@ func NewCategoryRepository() CategoryRepository {
 	return &CategoryRepositoryImpl{}
 }
 
-func (repository *CategoryRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, category Category) Category {
+func (repository *CategoryRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, category domain.Category) domain.Category {
 	ctxC, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -30,31 +25,31 @@ func (repository *CategoryRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, 
 
 	result, err := tx.ExecContext(ctxC, queryInsert, category.Name)
 
-	helper.PanicError(err)
+	helpers.PanicError(err)
 
 	id, err := result.LastInsertId()
 
-	helper.PanicError(err)
+	helpers.PanicError(err)
 
 	querySelect := "SELECT id, name, created_at, updated_at FROM category WHERE id = ?"
 
 	rows, err := tx.QueryContext(ctxC, querySelect, id)
 
-	helper.PanicError(err)
+	helpers.PanicError(err)
 
 	defer rows.Close()
 
-	createdCategory := Category{}
+	var createdCategory domain.Category
 
 	if rows.Next() {
 		err := rows.Scan(&createdCategory.Id, &createdCategory.Name, &createdCategory.Created_At, &createdCategory.Updated_At)
-		helper.PanicError(err)
+		helpers.PanicError(err)
 	}
 
 	return createdCategory
 }
 
-func (repository *CategoryRepositoryImpl) FindAll(ctx context.Context, tx *sql.Tx) []Category {
+func (repository *CategoryRepositoryImpl) FindAll(ctx context.Context, tx *sql.Tx) []domain.Category {
 	ctxC, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -62,18 +57,18 @@ func (repository *CategoryRepositoryImpl) FindAll(ctx context.Context, tx *sql.T
 
 	rows, err := tx.QueryContext(ctxC, query)
 
-	helper.PanicError(err)
+	helpers.PanicError(err)
 
 	defer rows.Close()
 
-	categories := []Category{}
+	var categories []domain.Category
 
 	for rows.Next() {
-		category := Category{}
+		var category domain.Category
 
 		err := rows.Scan(&category.Id, &category.Name, &category.Created_At, &category.Updated_At)
 
-		helper.PanicError(err)
+		helpers.PanicError(err)
 
 		categories = append(categories, category)
 	}
@@ -81,7 +76,7 @@ func (repository *CategoryRepositoryImpl) FindAll(ctx context.Context, tx *sql.T
 	return categories
 }
 
-func (repository *CategoryRepositoryImpl) FindById(ctx context.Context, tx *sql.Tx, categoryId int) (Category, error) {
+func (repository *CategoryRepositoryImpl) FindById(ctx context.Context, tx *sql.Tx, categoryId int) domain.Category {
 	ctxC, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -89,24 +84,24 @@ func (repository *CategoryRepositoryImpl) FindById(ctx context.Context, tx *sql.
 
 	rows, err := tx.QueryContext(ctxC, query, categoryId)
 
-	helper.PanicError(err)
+	helpers.PanicError(err)
 
 	defer rows.Close()
 
-	category := Category{}
+	var category domain.Category
 
 	if rows.Next() {
 		err := rows.Scan(&category.Id, &category.Name, &category.Created_At, &category.Updated_At)
 
-		helper.PanicError(err)
-
-		return category, nil
+		helpers.PanicError(err)
 	} else {
-		return category, helper.NotFoundError
+		panic(exception.NewNotFoundError("category not found"))
 	}
+
+	return category
 }
 
-func (repository *CategoryRepositoryImpl) Update(ctx context.Context, tx *sql.Tx, category Category) Category {
+func (repository *CategoryRepositoryImpl) Update(ctx context.Context, tx *sql.Tx, category domain.Category) domain.Category {
 	ctxC, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -114,14 +109,15 @@ func (repository *CategoryRepositoryImpl) Update(ctx context.Context, tx *sql.Tx
 
 	result, err := tx.ExecContext(ctxC, query, category.Name, category.Id)
 
-	helper.PanicError(err)
+	helpers.PanicError(err)
 
 	resultRows, err := result.RowsAffected()
 
-	helper.PanicError(err)
+	helpers.PanicError(err)
 
 	if resultRows == 0 {
-		panic(helper.NotFoundError)
+		log.Fatalf("expected single row affected, got %d rows affected", resultRows)
+		panic(exception.NewNotFoundError("category not found"))
 	}
 
 	return category
@@ -133,15 +129,8 @@ func (repository *CategoryRepositoryImpl) Delete(ctx context.Context, tx *sql.Tx
 
 	query := "DELETE FROM category WHERE id = ?"
 
-	result, err := tx.ExecContext(ctxC, query, categoryId)
+	_, err := tx.ExecContext(ctxC, query, categoryId)
 
-	helper.PanicError(err)
+	helpers.PanicError(err)
 
-	resultRows, err := result.RowsAffected()
-
-	helper.PanicError(err)
-
-	if resultRows == 0 {
-		panic(helper.NotFoundError)
-	}
 }
