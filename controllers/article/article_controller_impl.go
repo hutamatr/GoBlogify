@@ -1,73 +1,67 @@
-package go_blog
+package controllers
 
 import (
 	"net/http"
 	"strconv"
 
-	"github.com/hutamatr/go-blog-api/cmd/go_blog/helper"
+	"github.com/hutamatr/go-blog-api/helpers"
+	"github.com/hutamatr/go-blog-api/model/web"
+	servicesA "github.com/hutamatr/go-blog-api/services/article"
 	"github.com/julienschmidt/httprouter"
 )
 
-type ArticleController interface {
-	CreateArticle(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
-	FindAllArticle(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
-	FindByIdArticle(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
-	UpdateArticle(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
-	DeleteArticle(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
-}
-
 type ArticleControllerImpl struct {
-	service ArticleService
+	service servicesA.ArticleService
 }
 
-func NewArticleController(articleService ArticleService) ArticleController {
+func NewArticleController(articleService servicesA.ArticleService) ArticleController {
 	return &ArticleControllerImpl{
 		service: articleService,
 	}
 }
 
 func (controller *ArticleControllerImpl) CreateArticle(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-	articleRequest := ArticleCreateRequest{}
-	helper.DecodeJSONFromRequest(request, &articleRequest)
+	var articleRequest web.ArticleCreateRequest
+	helpers.DecodeJSONFromRequest(request, &articleRequest)
 
 	article := controller.service.Create(request.Context(), articleRequest)
 
-	articleResponse := ResponseJSON{
+	articleResponse := web.ResponseJSON{
 		Code:   http.StatusCreated,
-		Status: "OK",
+		Status: "CREATED",
 		Data:   article,
 	}
 
-	helper.EncodeJSONFromResponse(writer, articleResponse)
+	helpers.EncodeJSONFromResponse(writer, articleResponse)
 }
 
 func (controller *ArticleControllerImpl) FindAllArticle(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	articles := controller.service.FindAll(request.Context())
 
-	articleResponse := ResponseJSON{
+	articleResponse := web.ResponseJSON{
 		Code:   http.StatusOK,
 		Status: "OK",
 		Data:   articles,
 	}
 
-	helper.EncodeJSONFromResponse(writer, articleResponse)
+	helpers.EncodeJSONFromResponse(writer, articleResponse)
 }
 
 func (controller *ArticleControllerImpl) FindByIdArticle(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	id := params.ByName("articleId")
 	articleId, err := strconv.Atoi(id)
 
-	helper.PanicError(err)
+	helpers.PanicError(err)
 
 	article := controller.service.FindById(request.Context(), articleId)
 
-	articleResponse := ResponseJSON{
+	articleResponse := web.ResponseJSON{
 		Code:   http.StatusOK,
 		Status: "OK",
 		Data:   article,
 	}
 
-	helper.EncodeJSONFromResponse(writer, articleResponse)
+	helpers.EncodeJSONFromResponse(writer, articleResponse)
 }
 
 func (controller *ArticleControllerImpl) UpdateArticle(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
@@ -75,38 +69,37 @@ func (controller *ArticleControllerImpl) UpdateArticle(writer http.ResponseWrite
 	id := params.ByName("articleId")
 	articleId, err := strconv.Atoi(id)
 
-	helper.PanicError(err)
+	helpers.PanicError(err)
 
-	articleUpdateRequest := ArticleUpdateRequest{}
+	var articleUpdateRequest web.ArticleUpdateRequest
 
 	articleUpdateRequest.Id = articleId
 
-	helper.DecodeJSONFromRequest(request, &articleUpdateRequest)
+	helpers.DecodeJSONFromRequest(request, &articleUpdateRequest)
 
 	updatedArticle := controller.service.Update(request.Context(), articleUpdateRequest)
 
-	articleResponse := ResponseJSON{
+	articleResponse := web.ResponseJSON{
 		Code:   http.StatusOK,
-		Status: "OK",
+		Status: "UPDATED",
 		Data:   updatedArticle,
 	}
 
-	helper.EncodeJSONFromResponse(writer, articleResponse)
+	helpers.EncodeJSONFromResponse(writer, articleResponse)
 }
 
 func (controller *ArticleControllerImpl) DeleteArticle(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-
 	id := params.ByName("articleId")
-
 	articleId, err := strconv.Atoi(id)
-	helper.PanicError(err)
+
+	helpers.PanicError(err)
 
 	controller.service.Delete(request.Context(), articleId)
 
-	articleResponse := ResponseJSON{
+	articleResponse := web.ResponseJSON{
 		Code:   http.StatusOK,
-		Status: "OK",
+		Status: "DELETED",
 	}
 
-	helper.EncodeJSONFromResponse(writer, articleResponse)
+	helpers.EncodeJSONFromResponse(writer, articleResponse)
 }
