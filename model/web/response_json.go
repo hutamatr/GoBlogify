@@ -1,4 +1,4 @@
-package go_blog
+package web
 
 type ResponseJSON struct {
 	Code   int         `json:"code"`
