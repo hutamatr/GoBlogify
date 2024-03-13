@@ -1,6 +1,8 @@
-package helper
+package helpers
 
-import "database/sql"
+import (
+	"database/sql"
+)
 
 func TxRollbackCommit(tx *sql.Tx) {
 	err := recover()
