@@ -1,4 +1,4 @@
-package go_blog
+package app
 
 import (
 	"database/sql"
@@ -6,7 +6,7 @@ import (
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/hutamatr/go-blog-api/cmd/go_blog/helper"
+	"github.com/hutamatr/go-blog-api/helpers"
 )
 
 func ConnectDB() *sql.DB {
@@ -17,7 +17,7 @@ func ConnectDB() *sql.DB {
 	var Host = os.Getenv("HOST")
 
 	db, err := sql.Open("mysql", DBUsername+":"+DBPassword+"@tcp("+Host+":"+DBPort+")/"+DBName+"?parseTime=true")
-	helper.PanicError(err)
+	helpers.PanicError(err)
 
 	db.SetMaxIdleConns(10)
 	db.SetMaxOpenConns(100)
