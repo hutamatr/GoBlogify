@@ -28,7 +28,7 @@ func (controller *CategoryControllerImpl) CreateCategory(writer http.ResponseWri
 
 	CategoryResponse := web.ResponseJSON{
 		Code:   http.StatusCreated,
-		Status: "OK",
+		Status: "CREATED",
 		Data:   category,
 	}
 
@@ -48,12 +48,12 @@ func (controller *CategoryControllerImpl) FindAllCategory(writer http.ResponseWr
 }
 
 func (controller *CategoryControllerImpl) FindByIdCategory(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-	id := params.ByName("CategoryId")
-	CategoryId, err := strconv.Atoi(id)
+	id := params.ByName("categoryId")
+	categoryId, err := strconv.Atoi(id)
 
 	helpers.PanicError(err)
 
-	category := controller.service.FindById(request.Context(), CategoryId)
+	category := controller.service.FindById(request.Context(), categoryId)
 
 	CategoryResponse := web.ResponseJSON{
 		Code:   http.StatusOK,
@@ -66,14 +66,19 @@ func (controller *CategoryControllerImpl) FindByIdCategory(writer http.ResponseW
 
 func (controller *CategoryControllerImpl) UpdateCategory(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	var CategoryUpdateRequest web.CategoryUpdateRequest
-
 	helpers.DecodeJSONFromRequest(request, &CategoryUpdateRequest)
+
+	id := params.ByName("categoryId")
+	categoryId, err := strconv.Atoi(id)
+	helpers.PanicError(err)
+
+	CategoryUpdateRequest.Id = categoryId
 
 	updatedCategory := controller.service.Update(request.Context(), CategoryUpdateRequest)
 
 	CategoryResponse := web.ResponseJSON{
 		Code:   http.StatusOK,
-		Status: "OK",
+		Status: "UPDATED",
 		Data:   updatedCategory,
 	}
 
@@ -81,16 +86,16 @@ func (controller *CategoryControllerImpl) UpdateCategory(writer http.ResponseWri
 }
 
 func (controller *CategoryControllerImpl) DeleteCategory(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-	id := params.ByName("CategoryId")
-	CategoryId, err := strconv.Atoi(id)
+	id := params.ByName("categoryId")
+	categoryId, err := strconv.Atoi(id)
 
 	helpers.PanicError(err)
 
-	controller.service.Delete(request.Context(), CategoryId)
+	controller.service.Delete(request.Context(), categoryId)
 
 	CategoryResponse := web.ResponseJSON{
 		Code:   http.StatusOK,
-		Status: "OK",
+		Status: "DELETED",
 	}
 
 	helpers.EncodeJSONFromResponse(writer, CategoryResponse)

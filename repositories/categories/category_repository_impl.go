@@ -129,7 +129,15 @@ func (repository *CategoryRepositoryImpl) Delete(ctx context.Context, tx *sql.Tx
 
 	query := "DELETE FROM category WHERE id = ?"
 
-	_, err := tx.ExecContext(ctxC, query, categoryId)
+	result, err := tx.ExecContext(ctxC, query, categoryId)
+
+	helpers.PanicError(err)
+
+	resultRows, err := result.RowsAffected()
+
+	if resultRows == 0 {
+		panic(exception.NewNotFoundError("category not found"))
+	}
 
 	helpers.PanicError(err)
 
