@@ -1,0 +1,520 @@
+{
+  "openapi": "3.0.2",
+  "info": {
+    "title": "API Title",
+    "version": "1.0"
+  },
+  "servers": [{ "url": "http://localhost:8080/api" }],
+  "paths": {
+    "/articles": {
+      "get": {
+        "tags": ["Articles API"],
+        "description": "Get all articles",
+        "summary": "Get all articles",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "OK"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Article"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Articles API"],
+        "description": "Create an article",
+        "summary": "Create an article",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArticleRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Article created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 201
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "OK"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Article"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/articles/{id}": {
+      "get": {
+        "tags": ["Articles API"],
+        "description": "Get an article",
+        "summary": "Get an article",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "required": true,
+            "description": "Article ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get an article successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "OK"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Article"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Articles API"],
+        "description": "Update an article",
+        "summary": "Update an article",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "required": true,
+            "description": "Article ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArticleRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Update an article successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "OK"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Article"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Articles API"],
+        "description": "Delete an article",
+        "summary": "Delete an article",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "required": true,
+            "description": "Article ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Delete an article successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "OK"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/categories": {
+      "get": {
+        "tags": ["Categories API"],
+        "description": "Get all categories",
+        "summary": "Get all categories",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "OK"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Categories"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Categories API"],
+        "description": "Create an category",
+        "summary": "Create an category",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Article created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 201
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "OK"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Categories"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/categories/{id}": {
+      "get": {
+        "tags": ["Categories API"],
+        "description": "Get an category",
+        "summary": "Get an category",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "required": true,
+            "description": "Category ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get an category successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "OK"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Categories"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Categories API"],
+        "description": "Update an category",
+        "summary": "Update an category",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "required": true,
+            "description": "Category ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Update an category successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "OK"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Categories"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Categories API"],
+        "description": "Delete an category",
+        "summary": "Delete an category",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "required": true,
+            "description": "Category ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Delete an category successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "OK"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ArticleRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Article Title"
+          },
+          "body": {
+            "type": "string",
+            "example": "Article Body"
+          },
+          "author": {
+            "type": "string",
+            "example": "John Doe"
+          },
+          "published": {
+            "type": "boolean",
+            "example": true
+          },
+          "category_id": {
+            "type": "integer",
+            "example": 1
+          }
+        }
+      },
+      "CategoryRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Category Name"
+          }
+        }
+      },
+      "Article": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "title": {
+            "type": "string",
+            "example": "Article Title"
+          },
+          "body": {
+            "type": "string",
+            "example": "Article Body"
+          },
+          "author": {
+            "type": "string",
+            "example": "John Doe"
+          },
+          "created_at": {
+            "type": "string",
+            "example": "2022-01-01T00:00:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "example": "2022-01-01T00:00:00Z"
+          },
+          "deleted_at": {
+            "type": "string",
+            "example": "2022-01-01T00:00:00Z"
+          },
+          "deleted": {
+            "type": "boolean",
+            "example": false
+          },
+          "published": {
+            "type": "boolean",
+            "example": true
+          },
+          "category_id": {
+            "type": "integer",
+            "example": 1
+          }
+        }
+      },
+      "Categories": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "example": "Category Name"
+          }
+        }
+      }
+    }
+  }
+}

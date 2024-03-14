@@ -1,12 +1,14 @@
-package main
+package test
 
 import (
-	"log"
+	"database/sql"
+	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/hutamatr/go-blog-api/app"
+	_ "github.com/go-sql-driver/mysql"
 	controllersA "github.com/hutamatr/go-blog-api/controllers/article"
 	controllersC "github.com/hutamatr/go-blog-api/controllers/category"
 	"github.com/hutamatr/go-blog-api/helpers"
@@ -15,27 +17,41 @@ import (
 	"github.com/hutamatr/go-blog-api/routes"
 	servicesA "github.com/hutamatr/go-blog-api/services/article"
 	servicesC "github.com/hutamatr/go-blog-api/services/category"
-
 	"github.com/joho/godotenv"
 )
 
 func init() {
-	env := os.Getenv("APP_ENV")
-	if env == "" {
-		env = "development"
-	}
-
-	godotenv.Load(".env." + env)
-	if env != "test" {
-		godotenv.Load(".env")
-	}
-	godotenv.Load(".env." + env)
-	godotenv.Load()
+	err := godotenv.Load("../.env.test")
+	helpers.PanicError(err)
 }
 
-func main() {
-	db := app.ConnectDB()
-	validator := validator.New(validator.WithRequiredStructEnabled())
+func ConnectDBTest() *sql.DB {
+	var DBName = os.Getenv("DB_NAME")
+	var DBUsername = os.Getenv("DB_USERNAME")
+	var DBPassword = os.Getenv("DB_PASSWORD")
+	var DBPort = os.Getenv("DB_PORT")
+	var Host = os.Getenv("HOST")
+
+	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", DBUsername, DBPassword, Host, DBPort, DBName))
+	helpers.PanicError(err)
+
+	db.SetMaxIdleConns(10)
+	db.SetMaxOpenConns(100)
+	db.SetConnMaxIdleTime(5 * time.Minute)
+	db.SetConnMaxLifetime(1 * time.Hour)
+
+	return db
+}
+
+func DeleteDBTest(db *sql.DB) {
+	_, err := db.Exec("DELETE FROM article")
+	helpers.PanicError(err)
+	_, err = db.Exec("DELETE FROM category")
+	helpers.PanicError(err)
+}
+
+func SetupRouterTest(db *sql.DB) http.Handler {
+	validator := validator.New()
 
 	articleRepository := repositoriesA.NewArticleRepository()
 	articleService := servicesA.NewArticleService(articleRepository, db, validator)
@@ -50,16 +66,5 @@ func main() {
 		CategoryController: categoryController,
 	})
 
-	cors := helpers.Cors()
-
-	handler := cors.Handler(router)
-
-	server := http.Server{
-		Addr:    ":8080",
-		Handler: handler,
-	}
-
-	helpers.ServerRunningText()
-
-	log.Fatal(http.ListenAndServe(server.Addr, server.Handler))
+	return router
 }
