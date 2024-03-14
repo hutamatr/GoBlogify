@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/hutamatr/go-blog-api/app"
@@ -19,8 +20,17 @@ import (
 )
 
 func init() {
-	err := godotenv.Load(".env")
-	helpers.PanicError(err)
+	env := os.Getenv("APP_ENV")
+	if env == "" {
+		env = "development"
+	}
+
+	godotenv.Load(".env." + env)
+	if env != "test" {
+		godotenv.Load(".env")
+	}
+	godotenv.Load(".env." + env)
+	godotenv.Load()
 }
 
 func main() {

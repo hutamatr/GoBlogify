@@ -1,7 +1,6 @@
 package exception
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
@@ -21,7 +20,6 @@ func ErrorHandler(writer http.ResponseWriter, request *http.Request, err interfa
 
 func validationError(writer http.ResponseWriter, _ *http.Request, err interface{}) bool {
 	if validationError, ok := err.(validator.ValidationErrors); ok {
-		fmt.Println("validationError", ok, validationError.Error())
 		writer.Header().Add("Content-Type", "application/json")
 		writer.WriteHeader(http.StatusBadRequest)
 

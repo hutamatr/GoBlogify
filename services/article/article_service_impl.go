@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"database/sql"
-	"fmt"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/hutamatr/go-blog-api/helpers"
@@ -28,7 +27,6 @@ func NewArticleService(articleRepository repositories.ArticleRepository, db *sql
 
 func (service *ArticleServiceImpl) Create(ctx context.Context, request web.ArticleCreateRequest) web.ArticleResponse {
 	err := service.validator.Struct(request)
-	fmt.Println("errorr,", err)
 	helpers.PanicError(err)
 
 	tx, err := service.db.Begin()

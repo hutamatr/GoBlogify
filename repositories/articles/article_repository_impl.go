@@ -169,7 +169,15 @@ func (repository *ArticleRepositoryImpl) Delete(ctx context.Context, tx *sql.Tx,
 
 	query := "DELETE FROM article WHERE id = ?"
 
-	_, err := tx.ExecContext(ctxC, query, articleId)
+	result, err := tx.ExecContext(ctxC, query, articleId)
+
+	helpers.PanicError(err)
+
+	resultRows, err := result.RowsAffected()
+
+	if resultRows == 0 {
+		panic(exception.NewNotFoundError("article not found"))
+	}
 
 	helpers.PanicError(err)
 }

@@ -2,6 +2,7 @@ package app
 
 import (
 	"database/sql"
+	"fmt"
 	"os"
 	"time"
 
@@ -16,7 +17,7 @@ func ConnectDB() *sql.DB {
 	var DBPort = os.Getenv("DB_PORT")
 	var Host = os.Getenv("HOST")
 
-	db, err := sql.Open("mysql", DBUsername+":"+DBPassword+"@tcp("+Host+":"+DBPort+")/"+DBName+"?parseTime=true")
+	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", DBUsername, DBPassword, Host, DBPort, DBName))
 	helpers.PanicError(err)
 
 	db.SetMaxIdleConns(10)
