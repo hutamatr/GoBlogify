@@ -15,8 +15,8 @@ import (
 	"github.com/hutamatr/go-blog-api/model/domain"
 	"github.com/hutamatr/go-blog-api/model/web"
 
-	repositoriesA "github.com/hutamatr/go-blog-api/repositories/articles"
-	repositoriesC "github.com/hutamatr/go-blog-api/repositories/categories"
+	repositoriesA "github.com/hutamatr/go-blog-api/repositories/article"
+	repositoriesC "github.com/hutamatr/go-blog-api/repositories/category"
 	"github.com/stretchr/testify/assert"
 )
 

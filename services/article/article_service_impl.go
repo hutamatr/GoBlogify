@@ -8,7 +8,7 @@ import (
 	"github.com/hutamatr/go-blog-api/helpers"
 	"github.com/hutamatr/go-blog-api/model/domain"
 	"github.com/hutamatr/go-blog-api/model/web"
-	repositories "github.com/hutamatr/go-blog-api/repositories/articles"
+	repositories "github.com/hutamatr/go-blog-api/repositories/article"
 )
 
 type ArticleServiceImpl struct {

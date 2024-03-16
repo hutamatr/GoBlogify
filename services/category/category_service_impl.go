@@ -8,7 +8,7 @@ import (
 	"github.com/hutamatr/go-blog-api/helpers"
 	"github.com/hutamatr/go-blog-api/model/domain"
 	"github.com/hutamatr/go-blog-api/model/web"
-	repositoriesC "github.com/hutamatr/go-blog-api/repositories/categories"
+	repositoriesC "github.com/hutamatr/go-blog-api/repositories/category"
 )
 
 type CategoryServiceImpl struct {

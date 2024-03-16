@@ -9,12 +9,15 @@ import (
 	"github.com/hutamatr/go-blog-api/app"
 	controllersA "github.com/hutamatr/go-blog-api/controllers/article"
 	controllersC "github.com/hutamatr/go-blog-api/controllers/category"
+	controllersU "github.com/hutamatr/go-blog-api/controllers/user"
 	"github.com/hutamatr/go-blog-api/helpers"
-	repositoriesA "github.com/hutamatr/go-blog-api/repositories/articles"
-	repositoriesC "github.com/hutamatr/go-blog-api/repositories/categories"
+	repositoriesA "github.com/hutamatr/go-blog-api/repositories/article"
+	repositoriesC "github.com/hutamatr/go-blog-api/repositories/category"
+	repositoriesU "github.com/hutamatr/go-blog-api/repositories/user"
 	"github.com/hutamatr/go-blog-api/routes"
 	servicesA "github.com/hutamatr/go-blog-api/services/article"
 	servicesC "github.com/hutamatr/go-blog-api/services/category"
+	servicesU "github.com/hutamatr/go-blog-api/services/user"
 
 	"github.com/joho/godotenv"
 )
@@ -37,6 +40,10 @@ func main() {
 	db := app.ConnectDB()
 	validator := validator.New(validator.WithRequiredStructEnabled())
 
+	userRepository := repositoriesU.NewUserRepository()
+	userService := servicesU.NewUserService(userRepository, db, validator)
+	UserController := controllersU.NewUserController(userService)
+
 	articleRepository := repositoriesA.NewArticleRepository()
 	articleService := servicesA.NewArticleService(articleRepository, db, validator)
 	articleController := controllersA.NewArticleController(articleService)
@@ -46,6 +53,7 @@ func main() {
 	categoryController := controllersC.NewCategoryController(categoryService)
 
 	router := routes.Router(&routes.RouterControllers{
+		UserController:     UserController,
 		ArticleController:  articleController,
 		CategoryController: categoryController,
 	})
@@ -61,5 +69,5 @@ func main() {
 
 	helpers.ServerRunningText()
 
-	log.Fatal(http.ListenAndServe(server.Addr, server.Handler))
+	log.Fatal(server.ListenAndServe())
 }

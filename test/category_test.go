@@ -13,7 +13,7 @@ import (
 	"github.com/hutamatr/go-blog-api/helpers"
 	"github.com/hutamatr/go-blog-api/model/domain"
 	"github.com/hutamatr/go-blog-api/model/web"
-	repositories "github.com/hutamatr/go-blog-api/repositories/categories"
+	repositories "github.com/hutamatr/go-blog-api/repositories/category"
 	"github.com/stretchr/testify/assert"
 )
 
