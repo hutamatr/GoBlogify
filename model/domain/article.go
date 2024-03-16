@@ -4,10 +4,10 @@ import "time"
 
 type Article struct {
 	Id          int
+	Category_Id int
 	Title       string
 	Body        string
 	Author      string
-	Category_Id int
 	Published   bool
 	Deleted     bool
 	Created_At  time.Time

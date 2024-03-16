@@ -1,7 +1,7 @@
 package helpers
 
 import (
-	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -21,7 +21,6 @@ func ServerRunningText() {
 
 	for i := range serverRunningText {
 		<-ticker.C
-		fmt.Printf("%s ", textColor("OK"))
-		fmt.Println(serverRunningText[i])
+		log.Printf("%s %s\n", textColor("OK"), serverRunningText[i])
 	}
 }
