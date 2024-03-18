@@ -72,24 +72,24 @@ func (service *ArticleServiceImpl) FindById(ctx context.Context, articleId int) 
 	return web.ArticleResponse(article)
 }
 
-func (service *ArticleServiceImpl) Update(ctx context.Context, article web.ArticleUpdateRequest) web.ArticleResponse {
-	err := service.validator.Struct(article)
+func (service *ArticleServiceImpl) Update(ctx context.Context, request web.ArticleUpdateRequest) web.ArticleResponse {
+	err := service.validator.Struct(request)
 	helpers.PanicError(err)
 
 	tx, err := service.db.Begin()
 	helpers.PanicError(err)
 	defer helpers.TxRollbackCommit(tx)
 
-	service.repository.FindById(ctx, tx, article.Id)
+	service.repository.FindById(ctx, tx, request.Id)
 
 	updateArticleData := domain.Article{
-		Id:          article.Id,
-		Title:       article.Title,
-		Body:        article.Body,
-		Author:      article.Author,
-		Category_Id: article.Category_Id,
-		Published:   article.Published,
-		Deleted:     article.Deleted,
+		Id:          request.Id,
+		Title:       request.Title,
+		Body:        request.Body,
+		Author:      request.Author,
+		Category_Id: request.Category_Id,
+		Published:   request.Published,
+		Deleted:     request.Deleted,
 	}
 
 	updatedArticle := service.repository.Update(ctx, tx, updateArticleData)
