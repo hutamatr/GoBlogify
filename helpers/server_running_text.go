@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -15,7 +16,7 @@ func ServerRunningText() {
 	port := os.Getenv("PORT")
 
 	textColor := color.New(color.FgGreen).Add(color.BgBlack).SprintfFunc()
-	serverRunningText := []string{"Connecting to database...", "Connected!", "Server running on http://" + host + ":" + port, "Environment: " + env}
+	serverRunningText := []string{"Connecting to database...", "Connected!", fmt.Sprintf("Server running on http://%s:%s", host, port), fmt.Sprintf("Environment: %s", env)}
 	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 

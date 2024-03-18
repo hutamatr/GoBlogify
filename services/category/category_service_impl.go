@@ -90,7 +90,5 @@ func (service *CategoryServiceImpl) Delete(ctx context.Context, categoryId int) 
 	helpers.PanicError(err)
 	defer helpers.TxRollbackCommit(tx)
 
-	categoryData := service.repository.FindById(ctx, tx, categoryId)
-
-	service.repository.Delete(ctx, tx, categoryData.Id)
+	service.repository.Delete(ctx, tx, categoryId)
 }

@@ -31,29 +31,7 @@ func (repository *ArticleRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, a
 
 	helpers.PanicError(err)
 
-	querySelect := "SELECT article.id, article.title, article.body, article.author, article.created_at, article.updated_at, article.deleted_at, article.deleted, article.published, category.id, category.name, category.created_at, category.updated_at FROM article INNER JOIN category ON article.category_id = category.id WHERE article.id = ?"
-
-	rows, err := tx.QueryContext(ctxC, querySelect, id)
-
-	helpers.PanicError(err)
-
-	defer rows.Close()
-
-	var createdArticle domain.ArticleJoinCategory
-
-	var deletedAt sql.NullTime
-
-	if rows.Next() {
-		err := rows.Scan(&createdArticle.Id, &createdArticle.Title, &createdArticle.Body, &createdArticle.Author, &createdArticle.Created_At, &createdArticle.Updated_At, &deletedAt, &createdArticle.Deleted, &createdArticle.Published, &createdArticle.Category.Id, &createdArticle.Category.Name, &createdArticle.Category.Created_At, &createdArticle.Category.Updated_At)
-
-		helpers.PanicError(err)
-
-		if deletedAt.Valid {
-			createdArticle.Deleted_At = deletedAt.Time
-		} else {
-			createdArticle.Deleted_At = time.Time{}
-		}
-	}
+	createdArticle := repository.FindById(ctx, tx, int(id))
 
 	return createdArticle
 }
@@ -136,29 +114,7 @@ func (repository *ArticleRepositoryImpl) Update(ctx context.Context, tx *sql.Tx,
 
 	helpers.PanicError(err)
 
-	querySelect := "SELECT article.id, article.title, article.body, article.author, article.created_at, article.updated_at, article.deleted_at, article.deleted, article.published, category.id, category.name, category.created_at, category.updated_at FROM article INNER JOIN category ON article.category_id = category.id WHERE article.id = ?"
-
-	rows, err := tx.QueryContext(ctxC, querySelect, article.Id)
-
-	helpers.PanicError(err)
-
-	defer rows.Close()
-
-	var updatedArticle domain.ArticleJoinCategory
-
-	var deletedAt sql.NullTime
-
-	if rows.Next() {
-		err := rows.Scan(&updatedArticle.Id, &updatedArticle.Title, &updatedArticle.Body, &updatedArticle.Author, &updatedArticle.Created_At, &updatedArticle.Updated_At, &deletedAt, &updatedArticle.Deleted, &updatedArticle.Published, &updatedArticle.Category.Id, &updatedArticle.Category.Name, &updatedArticle.Category.Created_At, &updatedArticle.Category.Updated_At)
-
-		helpers.PanicError(err)
-
-		if deletedAt.Valid {
-			updatedArticle.Deleted_At = deletedAt.Time
-		} else {
-			updatedArticle.Deleted_At = time.Time{}
-		}
-	}
+	updatedArticle := repository.FindById(ctx, tx, article.Id)
 
 	return updatedArticle
 }

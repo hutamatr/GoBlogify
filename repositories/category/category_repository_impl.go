@@ -3,7 +3,6 @@ package repositories
 import (
 	"context"
 	"database/sql"
-	"log"
 
 	"github.com/hutamatr/go-blog-api/exception"
 	"github.com/hutamatr/go-blog-api/helpers"
@@ -31,20 +30,7 @@ func (repository *CategoryRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, 
 
 	helpers.PanicError(err)
 
-	querySelect := "SELECT id, name, created_at, updated_at FROM category WHERE id = ?"
-
-	rows, err := tx.QueryContext(ctxC, querySelect, id)
-
-	helpers.PanicError(err)
-
-	defer rows.Close()
-
-	var createdCategory domain.Category
-
-	if rows.Next() {
-		err := rows.Scan(&createdCategory.Id, &createdCategory.Name, &createdCategory.Created_At, &createdCategory.Updated_At)
-		helpers.PanicError(err)
-	}
+	createdCategory := repository.FindById(ctx, tx, int(id))
 
 	return createdCategory
 }
@@ -65,9 +51,7 @@ func (repository *CategoryRepositoryImpl) FindAll(ctx context.Context, tx *sql.T
 
 	for rows.Next() {
 		var category domain.Category
-
 		err := rows.Scan(&category.Id, &category.Name, &category.Created_At, &category.Updated_At)
-
 		helpers.PanicError(err)
 
 		categories = append(categories, category)
@@ -107,20 +91,13 @@ func (repository *CategoryRepositoryImpl) Update(ctx context.Context, tx *sql.Tx
 
 	query := "UPDATE category SET name = ? WHERE id = ?"
 
-	result, err := tx.ExecContext(ctxC, query, category.Name, category.Id)
+	_, err := tx.ExecContext(ctxC, query, category.Name, category.Id)
 
 	helpers.PanicError(err)
 
-	resultRows, err := result.RowsAffected()
+	updatedCategory := repository.FindById(ctx, tx, category.Id)
 
-	helpers.PanicError(err)
-
-	if resultRows == 0 {
-		log.Fatalf("expected single row affected, got %d rows affected", resultRows)
-		panic(exception.NewNotFoundError("category not found"))
-	}
-
-	return category
+	return updatedCategory
 }
 
 func (repository *CategoryRepositoryImpl) Delete(ctx context.Context, tx *sql.Tx, categoryId int) {
@@ -140,5 +117,4 @@ func (repository *CategoryRepositoryImpl) Delete(ctx context.Context, tx *sql.Tx
 	}
 
 	helpers.PanicError(err)
-
 }
