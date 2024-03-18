@@ -52,7 +52,7 @@ func (repository *UserRepositoryImpl) FindAll(ctx context.Context, tx *sql.Tx) [
 
 	var deletedAt sql.NullTime
 
-	if rows.Next() {
+	for rows.Next() {
 		var user domain.User
 		err := rows.Scan(&user.Id, &user.Username, &user.Email, &user.First_Name, &user.Last_Name, &user.Role_Id, &user.Created_At, &user.Updated_At, &deletedAt)
 
@@ -65,8 +65,6 @@ func (repository *UserRepositoryImpl) FindAll(ctx context.Context, tx *sql.Tx) [
 		}
 
 		users = append(users, user)
-	} else {
-		users = []domain.User{}
 	}
 
 	return users
