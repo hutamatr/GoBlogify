@@ -1,7 +1,7 @@
 package exception
 
 type UnauthorizedError struct {
-	Error string
+	Error string `json:"error"`
 }
 
 func NewUnauthorizedError(error string) UnauthorizedError {

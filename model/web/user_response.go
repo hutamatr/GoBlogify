@@ -21,11 +21,11 @@ type UserResponse struct {
 func ToUserResponse(user domain.User) UserResponse {
 	return UserResponse{
 		Id:         user.Id,
+		Role_Id:    user.Role_Id,
 		Username:   user.Username,
 		Email:      user.Email,
 		First_Name: user.First_Name,
 		Last_Name:  user.Last_Name,
-		Role_Id:    user.Role_Id,
 		Created_At: user.Created_At,
 		Updated_At: user.Updated_At,
 		Deleted_At: user.Deleted_At,
