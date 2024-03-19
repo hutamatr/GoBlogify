@@ -1,7 +1,7 @@
 package exception
 
 type BadRequestError struct {
-	Error string
+	Error string `json:"error"`
 }
 
 func NewBadRequestError(err string) BadRequestError {
