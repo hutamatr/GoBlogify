@@ -82,6 +82,24 @@ func (controller *UserControllerImpl) SignInUser(writer http.ResponseWriter, req
 	helpers.EncodeJSONFromResponse(writer, userResponse)
 }
 
+func (controller *UserControllerImpl) SignOutUser(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	cookie := http.Cookie{}
+	cookie.Name = "rt"
+	cookie.Value = ""
+	cookie.MaxAge = -1
+	cookie.Secure = true
+	cookie.HttpOnly = true
+	cookie.SameSite = http.SameSiteStrictMode
+	http.SetCookie(writer, &cookie)
+
+	userResponse := web.ResponseJSON{
+		Code:   http.StatusOK,
+		Status: "OK",
+	}
+
+	helpers.EncodeJSONFromResponse(writer, userResponse)
+}
+
 func (controller *UserControllerImpl) FindAllUser(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	users := controller.service.FindAll(request.Context())
 
@@ -174,5 +192,4 @@ func (controller *UserControllerImpl) GetRefreshToken(writer http.ResponseWriter
 	}
 
 	helpers.EncodeJSONFromResponse(writer, userResponse)
-
 }
