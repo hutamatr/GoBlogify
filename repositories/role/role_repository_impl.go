@@ -84,6 +84,27 @@ func (repository *RoleRepositoryImpl) FindById(ctx context.Context, tx *sql.Tx, 
 	return role
 }
 
+func (repository *RoleRepositoryImpl) FindByName(ctx context.Context, tx *sql.Tx, roleName string) domain.Role {
+	ctxC, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	query := "SELECT id, name, created_at, updated_at FROM role WHERE name = ?"
+
+	rows, err := tx.QueryContext(ctxC, query, roleName)
+
+	helpers.PanicError(err)
+
+	defer rows.Close()
+
+	var role domain.Role
+
+	if rows.Next() {
+		err := rows.Scan(&role.Id, &role.Name, &role.Created_At, &role.Updated_At)
+		helpers.PanicError(err)
+	}
+	return role
+}
+
 func (repository *RoleRepositoryImpl) Update(ctx context.Context, tx *sql.Tx, role domain.Role) domain.Role {
 	ctxC, cancel := context.WithCancel(ctx)
 	defer cancel()
