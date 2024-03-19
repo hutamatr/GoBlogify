@@ -9,6 +9,9 @@ import (
 )
 
 func ErrorHandler(writer http.ResponseWriter, request *http.Request, err interface{}) {
+	if badRequestError(writer, request, err) {
+		return
+	}
 	if notFoundError(writer, request, err) {
 		return
 	}
@@ -16,6 +19,25 @@ func ErrorHandler(writer http.ResponseWriter, request *http.Request, err interfa
 		return
 	}
 	internalServerError(writer, request, err)
+}
+
+func badRequestError(writer http.ResponseWriter, _ *http.Request, err interface{}) bool {
+	exception, ok := err.(BadRequestError)
+	if ok {
+		writer.Header().Add("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusBadRequest)
+
+		webResponseError := web.ResponseJSON{
+			Code:   http.StatusBadRequest,
+			Status: "BAD REQUEST",
+			Data:   exception.Error,
+		}
+
+		helpers.EncodeJSONFromResponse(writer, webResponseError)
+		return true
+	} else {
+		return false
+	}
 }
 
 func validationError(writer http.ResponseWriter, _ *http.Request, err interface{}) bool {
