@@ -40,7 +40,7 @@ func (repository *ArticleRepositoryImpl) FindAll(ctx context.Context, tx *sql.Tx
 	ctxC, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	query := "SELECT article.id, article.title, article.body, article.author, article.created_at, article.updated_at, article.deleted_at, article.deleted, article.published, category.id, category.name, category.created_at, category.updated_at FROM article INNER JOIN category ON article.category_id = category.id"
+	query := "SELECT article.id, article.title, article.body, article.author, article.created_at, article.updated_at, article.deleted_at, article.deleted, article.published, category.id, category.name, category.created_at, category.updated_at FROM article INNER JOIN category ON article.category_id = category.id WHERE article.deleted = false"
 
 	rows, err := tx.QueryContext(ctxC, query)
 
@@ -75,7 +75,7 @@ func (repository *ArticleRepositoryImpl) FindById(ctx context.Context, tx *sql.T
 	ctxC, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	query := "SELECT article.id, article.title, article.body, article.author, article.created_at, article.updated_at, article.deleted_at, article.deleted, article.published, category.id, category.name, category.created_at, category.updated_at FROM article INNER JOIN category ON article.category_id = category.id WHERE article.id = ?"
+	query := "SELECT article.id, article.title, article.body, article.author, article.created_at, article.updated_at, article.deleted_at, article.deleted, article.published, category.id, category.name, category.created_at, category.updated_at FROM article INNER JOIN category ON article.category_id = category.id WHERE article.id = ? AND article.deleted = false"
 
 	rows, err := tx.QueryContext(ctxC, query, articleId)
 
@@ -108,7 +108,7 @@ func (repository *ArticleRepositoryImpl) Update(ctx context.Context, tx *sql.Tx,
 	ctxC, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	queryUpdate := "UPDATE article SET title = ?, body = ?, author = ?, category_id = ?, published = ?, deleted = ? WHERE id = ?"
+	queryUpdate := "UPDATE article SET title = ?, body = ?, author = ?, category_id = ?, published = ?, deleted = ? WHERE id = ? AND deleted = false"
 
 	_, err := tx.ExecContext(ctxC, queryUpdate, article.Title, article.Body, article.Author, article.Category_Id, article.Published, article.Deleted, article.Id)
 
@@ -123,7 +123,7 @@ func (repository *ArticleRepositoryImpl) Delete(ctx context.Context, tx *sql.Tx,
 	ctxC, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	query := "DELETE FROM article WHERE id = ?"
+	query := "UPDATE article SET deleted = true, deleted_at = NOW() WHERE id = ?"
 
 	result, err := tx.ExecContext(ctxC, query, articleId)
 
