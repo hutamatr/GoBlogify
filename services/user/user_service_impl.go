@@ -11,12 +11,14 @@ import (
 	"github.com/hutamatr/go-blog-api/helpers"
 	"github.com/hutamatr/go-blog-api/model/domain"
 	"github.com/hutamatr/go-blog-api/model/web"
+	repositoriesR "github.com/hutamatr/go-blog-api/repositories/role"
 	repositoriesU "github.com/hutamatr/go-blog-api/repositories/user"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type UserServiceImpl struct {
 	userRepository repositoriesU.UserRepository
+	roleRepository repositoriesR.RoleRepository
 	DB             *sql.DB
 	Validator      *validator.Validate
 }
@@ -24,9 +26,10 @@ type UserServiceImpl struct {
 var accessTokenSecret = os.Getenv("ACCESS_TOKEN_SECRET")
 var refreshTokenSecret = os.Getenv("REFRESH_TOKEN_SECRET")
 
-func NewUserService(userRepository repositoriesU.UserRepository, db *sql.DB, validator *validator.Validate) UserService {
+func NewUserService(userRepository repositoriesU.UserRepository, roleRepository repositoriesR.RoleRepository, db *sql.DB, validator *validator.Validate) UserService {
 	return &UserServiceImpl{
 		userRepository: userRepository,
+		roleRepository: roleRepository,
 		DB:             db,
 		Validator:      validator,
 	}
@@ -46,6 +49,15 @@ func (service *UserServiceImpl) SignUp(ctx context.Context, request web.UserCrea
 		panic(exception.NewBadRequestError("email already exist"))
 	}
 
+	role := service.roleRepository.FindByName(ctx, tx, "user")
+
+	if role.Name != "user" {
+		newRole := domain.Role{
+			Name: "user",
+		}
+		role = service.roleRepository.Save(ctx, tx, newRole)
+	}
+
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
 
 	helpers.PanicError(err)
@@ -54,15 +66,15 @@ func (service *UserServiceImpl) SignUp(ctx context.Context, request web.UserCrea
 		Username: request.Username,
 		Email:    request.Email,
 		Password: string(hashedPassword),
-		Role_Id:  1, // temporary
+		Role_Id:  role.Id,
 	}
 
 	newUser = service.userRepository.Save(ctx, tx, newUser)
 
-	accessToken, err := helpers.GenerateToken(user.Username, 5*time.Minute, accessTokenSecret)
+	accessToken, err := helpers.GenerateToken(request.Username, 5*time.Minute, accessTokenSecret)
 	helpers.PanicError(err)
 
-	refreshToken, err := helpers.GenerateToken(user.Username, 168*time.Hour, refreshTokenSecret)
+	refreshToken, err := helpers.GenerateToken(request.Username, 168*time.Hour, refreshTokenSecret)
 	helpers.PanicError(err)
 
 	return web.ToUserResponse(newUser), accessToken, refreshToken
@@ -131,7 +143,6 @@ func (service *UserServiceImpl) Update(ctx context.Context, request web.UserUpda
 	user := service.userRepository.FindOne(ctx, tx, request.Id, "")
 
 	user.Username = request.Username
-	user.Email = request.Email
 	user.First_Name = request.First_Name
 	user.Last_Name = request.Last_Name
 
