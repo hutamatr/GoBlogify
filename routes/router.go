@@ -25,6 +25,7 @@ func Router(routerControllers *RouterControllers) *httprouter.Router {
 
 	router.POST("/api/signup", routerControllers.UserController.CreateUser)
 	router.POST("/api/signin", routerControllers.UserController.SignInUser)
+	router.POST("/api/signout", routerControllers.UserController.SignOutUser)
 	router.GET("/api/user", routerControllers.UserController.FindAllUser)
 	router.GET("/api/user/:userId", routerControllers.UserController.FindByIdUser)
 	router.PUT("/api/user/:userId", routerControllers.UserController.UpdateUser)

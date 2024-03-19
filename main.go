@@ -43,10 +43,6 @@ func main() {
 	db := app.ConnectDB()
 	validator := validator.New(validator.WithRequiredStructEnabled())
 
-	userRepository := repositoriesU.NewUserRepository()
-	userService := servicesU.NewUserService(userRepository, db, validator)
-	UserController := controllersU.NewUserController(userService)
-
 	roleRepository := repositoriesR.NewRoleRepository()
 	roleService := servicesR.NewRoleService(roleRepository, db, validator)
 	roleController := controllersR.NewRoleController(roleService)
@@ -58,6 +54,10 @@ func main() {
 	categoryRepository := repositoriesC.NewCategoryRepository()
 	categoryService := servicesC.NewCategoryService(categoryRepository, db, validator)
 	categoryController := controllersC.NewCategoryController(categoryService)
+
+	userRepository := repositoriesU.NewUserRepository()
+	userService := servicesU.NewUserService(userRepository, roleRepository, db, validator)
+	UserController := controllersU.NewUserController(userService)
 
 	router := routes.Router(&routes.RouterControllers{
 		UserController:     UserController,
