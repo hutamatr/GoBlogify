@@ -20,7 +20,7 @@ func GenerateToken(username string, expired time.Duration, tokenSecret string) (
 	return tokenString, err
 }
 
-func VerifyToken(tokenString string, tokenSecret string) (jwt.MapClaims, error) {
+func VerifyToken(tokenString string, tokenSecret []byte) (jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		return tokenSecret, nil
 	})
