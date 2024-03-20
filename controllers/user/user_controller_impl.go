@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"net/http"
-	"os"
 	"strconv"
 	"time"
 
@@ -17,8 +16,10 @@ type UserControllerImpl struct {
 	service servicesU.UserService
 }
 
-var accessTokenSecret = os.Getenv("ACCESS_TOKEN_SECRET")
-var refreshTokenSecret = os.Getenv("REFRESH_TOKEN_SECRET")
+var env = helpers.NewEnv()
+var accessTokenSecret = env.SecretToken.AccessSecret
+var refreshTokenSecret = env.SecretToken.RefreshSecret
+var AppEnv = env.App.AppEnv
 
 func NewUserController(userService servicesU.UserService) UserController {
 	return &UserControllerImpl{
@@ -37,7 +38,7 @@ func (controller *UserControllerImpl) CreateUser(writer http.ResponseWriter, req
 	cookie.Name = "rt"
 	cookie.Value = refreshToken
 	cookie.MaxAge = 7 * 24 * 60 * 60 * 1000
-	cookie.Secure = true
+	cookie.Secure = AppEnv == "production"
 	cookie.HttpOnly = true
 	cookie.SameSite = http.SameSiteStrictMode
 	http.SetCookie(writer, &cookie)
@@ -65,7 +66,7 @@ func (controller *UserControllerImpl) SignInUser(writer http.ResponseWriter, req
 	cookie.Name = "rt"
 	cookie.Value = refreshToken
 	cookie.MaxAge = 7 * 24 * 60 * 60 * 1000
-	cookie.Secure = true
+	cookie.Secure = AppEnv == "production"
 	cookie.HttpOnly = true
 	cookie.SameSite = http.SameSiteStrictMode
 	http.SetCookie(writer, &cookie)
@@ -87,7 +88,7 @@ func (controller *UserControllerImpl) SignOutUser(writer http.ResponseWriter, re
 	cookie.Name = "rt"
 	cookie.Value = ""
 	cookie.MaxAge = -1
-	cookie.Secure = true
+	cookie.Secure = AppEnv == "production"
 	cookie.HttpOnly = true
 	cookie.SameSite = http.SameSiteStrictMode
 	http.SetCookie(writer, &cookie)
@@ -171,7 +172,7 @@ func (controller *UserControllerImpl) GetRefreshToken(writer http.ResponseWriter
 		panic(exception.NewUnauthorizedError(err.Error()))
 	}
 
-	claims, err := helpers.VerifyToken(refreshToken.Value, refreshTokenSecret)
+	claims, err := helpers.VerifyToken(refreshToken.Value, []byte(refreshTokenSecret))
 
 	if err != nil {
 		panic(exception.NewUnauthorizedError(err.Error()))

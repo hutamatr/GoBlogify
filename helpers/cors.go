@@ -1,13 +1,12 @@
 package helpers
 
 import (
-	"os"
-
 	"github.com/rs/cors"
 )
 
 func Cors() *cors.Cors {
-	var AppEnv = os.Getenv("APP_ENV")
+	env := NewEnv()
+	var AppEnv = env.App.AppEnv
 
 	cors := cors.New(cors.Options{
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},

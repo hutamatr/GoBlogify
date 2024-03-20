@@ -29,7 +29,7 @@ func badRequestError(writer http.ResponseWriter, _ *http.Request, err interface{
 
 		webResponseError := web.ResponseJSON{
 			Code:   http.StatusBadRequest,
-			Status: "BAD REQUEST",
+			Status: "Bad Request",
 			Data:   exception.Error,
 		}
 

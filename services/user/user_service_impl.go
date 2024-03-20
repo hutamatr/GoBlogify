@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"database/sql"
-	"os"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -23,8 +22,9 @@ type UserServiceImpl struct {
 	Validator      *validator.Validate
 }
 
-var accessTokenSecret = os.Getenv("ACCESS_TOKEN_SECRET")
-var refreshTokenSecret = os.Getenv("REFRESH_TOKEN_SECRET")
+var env = helpers.NewEnv()
+var accessTokenSecret = env.SecretToken.AccessSecret
+var refreshTokenSecret = env.SecretToken.RefreshSecret
 
 func NewUserService(userRepository repositoriesU.UserRepository, roleRepository repositoriesR.RoleRepository, db *sql.DB, validator *validator.Validate) UserService {
 	return &UserServiceImpl{
