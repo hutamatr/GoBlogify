@@ -12,6 +12,7 @@ import (
 	controllersR "github.com/hutamatr/go-blog-api/controllers/role"
 	controllersU "github.com/hutamatr/go-blog-api/controllers/user"
 	"github.com/hutamatr/go-blog-api/helpers"
+	"github.com/hutamatr/go-blog-api/middleware"
 	repositoriesA "github.com/hutamatr/go-blog-api/repositories/article"
 	repositoriesC "github.com/hutamatr/go-blog-api/repositories/category"
 	repositoriesR "github.com/hutamatr/go-blog-api/repositories/role"
@@ -67,12 +68,11 @@ func main() {
 	})
 
 	cors := helpers.Cors()
-
-	handler := cors.Handler(router)
+	corsHandler := cors.Handler(router)
 
 	server := http.Server{
 		Addr:    ":8080",
-		Handler: handler,
+		Handler: middleware.NewAuthMiddleware(corsHandler),
 	}
 
 	helpers.ServerRunningText()
