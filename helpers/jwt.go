@@ -7,6 +7,16 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+func AccessTokenDuration(appEnv string) time.Duration {
+	var accessTokenExpired time.Duration
+	if appEnv == "production" {
+		accessTokenExpired = 5 * time.Minute
+	} else {
+		accessTokenExpired = 2 * time.Hour
+	}
+	return accessTokenExpired
+}
+
 func GenerateToken(username string, expired time.Duration, tokenSecret string) (string, error) {
 	tokenBuilder := jwt.NewWithClaims(jwt.SigningMethodHS256,
 		jwt.MapClaims{
