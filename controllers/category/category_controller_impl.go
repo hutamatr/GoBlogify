@@ -4,17 +4,17 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/hutamatr/go-blog-api/helpers"
-	"github.com/hutamatr/go-blog-api/model/web"
-	servicesC "github.com/hutamatr/go-blog-api/services/category"
+	"github.com/hutamatr/GoBlogify/helpers"
+	"github.com/hutamatr/GoBlogify/model/web"
+	servicesCategory "github.com/hutamatr/GoBlogify/services/category"
 	"github.com/julienschmidt/httprouter"
 )
 
 type CategoryControllerImpl struct {
-	service servicesC.CategoryService
+	service servicesCategory.CategoryService
 }
 
-func NewCategoryController(categoryService servicesC.CategoryService) CategoryController {
+func NewCategoryController(categoryService servicesCategory.CategoryService) CategoryController {
 	return &CategoryControllerImpl{
 		service: categoryService,
 	}

@@ -5,19 +5,19 @@ import (
 	"database/sql"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/hutamatr/go-blog-api/helpers"
-	"github.com/hutamatr/go-blog-api/model/domain"
-	"github.com/hutamatr/go-blog-api/model/web"
-	repositoriesC "github.com/hutamatr/go-blog-api/repositories/category"
+	"github.com/hutamatr/GoBlogify/helpers"
+	"github.com/hutamatr/GoBlogify/model/domain"
+	"github.com/hutamatr/GoBlogify/model/web"
+	repositoriesCategory "github.com/hutamatr/GoBlogify/repositories/category"
 )
 
 type CategoryServiceImpl struct {
-	repository repositoriesC.CategoryRepository
+	repository repositoriesCategory.CategoryRepository
 	db         *sql.DB
 	validator  *validator.Validate
 }
 
-func NewCategoryService(categoryRepository repositoriesC.CategoryRepository, db *sql.DB, validator *validator.Validate) CategoryService {
+func NewCategoryService(categoryRepository repositoriesCategory.CategoryRepository, db *sql.DB, validator *validator.Validate) CategoryService {
 	return &CategoryServiceImpl{
 		repository: categoryRepository,
 		db:         db,
@@ -39,7 +39,7 @@ func (service *CategoryServiceImpl) Create(ctx context.Context, request web.Cate
 
 	createdCategory := service.repository.Save(ctx, tx, newCategory)
 
-	return web.CategoryResponse(createdCategory)
+	return web.ToCategoryResponse(createdCategory)
 }
 
 func (service *CategoryServiceImpl) FindAll(ctx context.Context) []web.CategoryResponse {
@@ -51,8 +51,12 @@ func (service *CategoryServiceImpl) FindAll(ctx context.Context) []web.CategoryR
 
 	var categoriesData []web.CategoryResponse
 
+	if len(categories) == 0 {
+		return categoriesData
+	}
+
 	for _, category := range categories {
-		categoriesData = append(categoriesData, web.CategoryResponse(category))
+		categoriesData = append(categoriesData, web.ToCategoryResponse(category))
 	}
 
 	return categoriesData
@@ -65,7 +69,7 @@ func (service *CategoryServiceImpl) FindById(ctx context.Context, categoryId int
 
 	category := service.repository.FindById(ctx, tx, categoryId)
 
-	return web.CategoryResponse(category)
+	return web.ToCategoryResponse(category)
 }
 
 func (service *CategoryServiceImpl) Update(ctx context.Context, request web.CategoryUpdateRequest) web.CategoryResponse {
@@ -82,7 +86,7 @@ func (service *CategoryServiceImpl) Update(ctx context.Context, request web.Cate
 
 	updatedCategory := service.repository.Update(ctx, tx, categoryData)
 
-	return web.CategoryResponse(updatedCategory)
+	return web.ToCategoryResponse(updatedCategory)
 }
 
 func (service *CategoryServiceImpl) Delete(ctx context.Context, categoryId int) {

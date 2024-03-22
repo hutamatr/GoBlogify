@@ -11,6 +11,7 @@ func PanicError(err error) {
 	outputColor := color.New(color.FgRed).Add(color.BgBlack).SprintfFunc()
 	if err != nil {
 		log.Printf("%s%v", errorColor("[ERROR] An error occurred-> "), outputColor(err.Error()))
+		log.SetFlags(log.LstdFlags | log.Lshortfile)
 		panic(err)
 	}
 }

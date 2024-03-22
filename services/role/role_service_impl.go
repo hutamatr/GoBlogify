@@ -5,19 +5,19 @@ import (
 	"database/sql"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/hutamatr/go-blog-api/helpers"
-	"github.com/hutamatr/go-blog-api/model/domain"
-	"github.com/hutamatr/go-blog-api/model/web"
-	repositoriesR "github.com/hutamatr/go-blog-api/repositories/role"
+	"github.com/hutamatr/GoBlogify/helpers"
+	"github.com/hutamatr/GoBlogify/model/domain"
+	"github.com/hutamatr/GoBlogify/model/web"
+	repositoriesRole "github.com/hutamatr/GoBlogify/repositories/role"
 )
 
 type RoleServiceImpl struct {
-	repository repositoriesR.RoleRepository
+	repository repositoriesRole.RoleRepository
 	db         *sql.DB
 	validator  *validator.Validate
 }
 
-func NewRoleService(roleRepository repositoriesR.RoleRepository, db *sql.DB, validator *validator.Validate) RoleService {
+func NewRoleService(roleRepository repositoriesRole.RoleRepository, db *sql.DB, validator *validator.Validate) RoleService {
 	return &RoleServiceImpl{
 		repository: roleRepository,
 		db:         db,
@@ -39,7 +39,7 @@ func (service *RoleServiceImpl) Create(ctx context.Context, request web.RoleCrea
 
 	createdRole := service.repository.Save(ctx, tx, roleRequest)
 
-	return web.RoleResponse(createdRole)
+	return web.ToRoleResponse(createdRole)
 }
 
 func (service *RoleServiceImpl) FindAll(ctx context.Context) []web.RoleResponse {
@@ -52,7 +52,7 @@ func (service *RoleServiceImpl) FindAll(ctx context.Context) []web.RoleResponse 
 	var rolesData []web.RoleResponse
 
 	for _, role := range roles {
-		rolesData = append(rolesData, web.RoleResponse(role))
+		rolesData = append(rolesData, web.ToRoleResponse(role))
 	}
 
 	return rolesData
@@ -65,7 +65,7 @@ func (service *RoleServiceImpl) FindById(ctx context.Context, roleId int) web.Ro
 
 	role := service.repository.FindById(ctx, tx, roleId)
 
-	return web.RoleResponse(role)
+	return web.ToRoleResponse(role)
 }
 
 func (service *RoleServiceImpl) Update(ctx context.Context, request web.RoleUpdateRequest) web.RoleResponse {
@@ -82,7 +82,7 @@ func (service *RoleServiceImpl) Update(ctx context.Context, request web.RoleUpda
 
 	updatedRole := service.repository.Update(ctx, tx, role)
 
-	return web.RoleResponse(updatedRole)
+	return web.ToRoleResponse(updatedRole)
 }
 
 func (service *RoleServiceImpl) Delete(ctx context.Context, roleId int) {

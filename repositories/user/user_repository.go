@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/hutamatr/go-blog-api/model/domain"
+	"github.com/hutamatr/GoBlogify/model/domain"
 )
 
 type UserRepository interface {

@@ -12,11 +12,11 @@ import (
 	"testing"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/hutamatr/go-blog-api/helpers"
-	"github.com/hutamatr/go-blog-api/model/web"
-	repositoriesR "github.com/hutamatr/go-blog-api/repositories/role"
-	repositoriesU "github.com/hutamatr/go-blog-api/repositories/user"
-	servicesU "github.com/hutamatr/go-blog-api/services/user"
+	"github.com/hutamatr/GoBlogify/helpers"
+	"github.com/hutamatr/GoBlogify/model/web"
+	repositoriesRole "github.com/hutamatr/GoBlogify/repositories/role"
+	repositoriesUser "github.com/hutamatr/GoBlogify/repositories/user"
+	servicesUser "github.com/hutamatr/GoBlogify/services/user"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -28,9 +28,9 @@ func createUserTestUser(db *sql.DB) web.UserResponse {
 	helpers.PanicError(err)
 	defer tx.Commit()
 
-	userRepository := repositoriesU.NewUserRepository()
-	roleRepository := repositoriesR.NewRoleRepository()
-	userService := servicesU.NewUserService(userRepository, roleRepository, db, validator)
+	userRepository := repositoriesUser.NewUserRepository()
+	roleRepository := repositoriesRole.NewRoleRepository()
+	userService := servicesUser.NewUserService(userRepository, roleRepository, db, validator)
 	user, _, _ := userService.SignUp(ctx, web.UserCreateRequest{Username: "userTest", Email: "testing@example.com", Password: "Password123!"})
 
 	return user

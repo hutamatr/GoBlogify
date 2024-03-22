@@ -3,7 +3,7 @@ package services
 import (
 	"context"
 
-	"github.com/hutamatr/go-blog-api/model/web"
+	"github.com/hutamatr/GoBlogify/model/web"
 )
 
 type CategoryService interface {

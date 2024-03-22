@@ -3,21 +3,23 @@ package routes
 import (
 	"net/http"
 
-	controllersA "github.com/hutamatr/go-blog-api/controllers/article"
-	controllersC "github.com/hutamatr/go-blog-api/controllers/category"
-	controllersR "github.com/hutamatr/go-blog-api/controllers/role"
-	controllersU "github.com/hutamatr/go-blog-api/controllers/user"
-	"github.com/hutamatr/go-blog-api/exception"
-	"github.com/hutamatr/go-blog-api/helpers"
-	"github.com/hutamatr/go-blog-api/model/web"
+	controllersCategory "github.com/hutamatr/GoBlogify/controllers/category"
+	controllersComment "github.com/hutamatr/GoBlogify/controllers/comment"
+	controllersPost "github.com/hutamatr/GoBlogify/controllers/post"
+	controllersRole "github.com/hutamatr/GoBlogify/controllers/role"
+	controllersUser "github.com/hutamatr/GoBlogify/controllers/user"
+	"github.com/hutamatr/GoBlogify/exception"
+	"github.com/hutamatr/GoBlogify/helpers"
+	"github.com/hutamatr/GoBlogify/model/web"
 	"github.com/julienschmidt/httprouter"
 )
 
 type RouterControllers struct {
-	UserController     controllersU.UserController
-	ArticleController  controllersA.ArticleController
-	CategoryController controllersC.CategoryController
-	RoleController     controllersR.RoleController
+	UserController     controllersUser.UserController
+	PostController     controllersPost.PostController
+	CategoryController controllersCategory.CategoryController
+	RoleController     controllersRole.RoleController
+	CommentController  controllersComment.CommentController
 }
 
 func Router(routerControllers *RouterControllers) *httprouter.Router {
@@ -38,11 +40,17 @@ func Router(routerControllers *RouterControllers) *httprouter.Router {
 	router.PUT("/api/role/:roleId", routerControllers.RoleController.UpdateRole)
 	router.DELETE("/api/role/:roleId", routerControllers.RoleController.DeleteRole)
 
-	router.POST("/api/article", routerControllers.ArticleController.CreateArticle)
-	router.GET("/api/article", routerControllers.ArticleController.FindAllArticle)
-	router.GET("/api/article/:articleId", routerControllers.ArticleController.FindByIdArticle)
-	router.PUT("/api/article/:articleId", routerControllers.ArticleController.UpdateArticle)
-	router.DELETE("/api/article/:articleId", routerControllers.ArticleController.DeleteArticle)
+	router.POST("/api/post", routerControllers.PostController.CreatePost)
+	router.GET("/api/post", routerControllers.PostController.FindAllPost)
+	router.GET("/api/post/:postId", routerControllers.PostController.FindByIdPost)
+	router.PUT("/api/post/:postId", routerControllers.PostController.UpdatePost)
+	router.DELETE("/api/post/:postId", routerControllers.PostController.DeletePost)
+
+	router.POST("/api/comment", routerControllers.CommentController.CreateComment)
+	router.GET("/api/comment", routerControllers.CommentController.FindCommentsByPost)
+	router.GET("/api/comment/:commentId", routerControllers.CommentController.FindByIdComment)
+	router.PUT("/api/comment/:commentId", routerControllers.CommentController.UpdateComment)
+	router.DELETE("/api/comment/:commentId", routerControllers.CommentController.DeleteComment)
 
 	router.POST("/api/category", routerControllers.CategoryController.CreateCategory)
 	router.GET("/api/category", routerControllers.CategoryController.FindAllCategory)

@@ -6,11 +6,11 @@
   },
   "servers": [{ "url": "http://localhost:8080/api" }],
   "paths": {
-    "/articles": {
+    "/post": {
       "get": {
-        "tags": ["Articles API"],
-        "description": "Get all articles",
-        "summary": "Get all articles",
+        "tags": ["Posts API"],
+        "description": "Get all posts",
+        "summary": "Get all posts",
         "responses": {
           "200": {
             "description": "OK",
@@ -30,7 +30,7 @@
                     "data": {
                       "type": "array",
                       "items": {
-                        "$ref": "#/components/schemas/Article"
+                        "$ref": "#/components/schemas/Post"
                       }
                     }
                   }
@@ -41,22 +41,22 @@
         }
       },
       "post": {
-        "tags": ["Articles API"],
-        "description": "Create an article",
-        "summary": "Create an article",
+        "tags": ["Posts API"],
+        "description": "Create an post",
+        "summary": "Create an post",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ArticleRequest"
+                "$ref": "#/components/schemas/PostRequest"
               }
             }
           }
         },
         "responses": {
           "201": {
-            "description": "Article created successfully",
+            "description": "Post created successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -71,7 +71,7 @@
                       "example": "OK"
                     },
                     "data": {
-                      "$ref": "#/components/schemas/Article"
+                      "$ref": "#/components/schemas/Post"
                     }
                   }
                 }
@@ -81,11 +81,11 @@
         }
       }
     },
-    "/articles/{id}": {
+    "/post/{id}": {
       "get": {
-        "tags": ["Articles API"],
-        "description": "Get an article",
-        "summary": "Get an article",
+        "tags": ["Posts API"],
+        "description": "Get an post",
+        "summary": "Get an post",
         "parameters": [
           {
             "in": "path",
@@ -94,12 +94,12 @@
               "type": "integer"
             },
             "required": true,
-            "description": "Article ID"
+            "description": "Post ID"
           }
         ],
         "responses": {
           "200": {
-            "description": "Get an article successfully",
+            "description": "Get an post successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -114,7 +114,7 @@
                       "example": "OK"
                     },
                     "data": {
-                      "$ref": "#/components/schemas/Article"
+                      "$ref": "#/components/schemas/Post"
                     }
                   }
                 }
@@ -124,9 +124,9 @@
         }
       },
       "put": {
-        "tags": ["Articles API"],
-        "description": "Update an article",
-        "summary": "Update an article",
+        "tags": ["Posts API"],
+        "description": "Update an post",
+        "summary": "Update an post",
         "parameters": [
           {
             "in": "path",
@@ -135,7 +135,7 @@
               "type": "integer"
             },
             "required": true,
-            "description": "Article ID"
+            "description": "Post ID"
           }
         ],
         "requestBody": {
@@ -143,14 +143,14 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ArticleRequest"
+                "$ref": "#/components/schemas/PostRequest"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Update an article successfully",
+            "description": "Update an post successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -165,7 +165,7 @@
                       "example": "OK"
                     },
                     "data": {
-                      "$ref": "#/components/schemas/Article"
+                      "$ref": "#/components/schemas/Post"
                     }
                   }
                 }
@@ -175,9 +175,9 @@
         }
       },
       "delete": {
-        "tags": ["Articles API"],
-        "description": "Delete an article",
-        "summary": "Delete an article",
+        "tags": ["Posts API"],
+        "description": "Delete an post",
+        "summary": "Delete an post",
         "parameters": [
           {
             "in": "path",
@@ -186,12 +186,12 @@
               "type": "integer"
             },
             "required": true,
-            "description": "Article ID"
+            "description": "Post ID"
           }
         ],
         "responses": {
           "200": {
-            "description": "Delete an article successfully",
+            "description": "Delete an post successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -263,7 +263,7 @@
         },
         "responses": {
           "201": {
-            "description": "Article created successfully",
+            "description": "Post created successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -423,16 +423,16 @@
   },
   "components": {
     "schemas": {
-      "ArticleRequest": {
+      "PostRequest": {
         "type": "object",
         "properties": {
           "title": {
             "type": "string",
-            "example": "Article Title"
+            "example": "Post Title"
           },
           "body": {
             "type": "string",
-            "example": "Article Body"
+            "example": "Post Body"
           },
           "author": {
             "type": "string",
@@ -457,7 +457,7 @@
           }
         }
       },
-      "Article": {
+      "Post": {
         "type": "object",
         "properties": {
           "id": {
@@ -466,11 +466,11 @@
           },
           "title": {
             "type": "string",
-            "example": "Article Title"
+            "example": "Post Title"
           },
           "body": {
             "type": "string",
-            "example": "Article Body"
+            "example": "Post Body"
           },
           "author": {
             "type": "string",

@@ -6,27 +6,28 @@ import (
 	"time"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/hutamatr/go-blog-api/exception"
-	"github.com/hutamatr/go-blog-api/helpers"
-	"github.com/hutamatr/go-blog-api/model/domain"
-	"github.com/hutamatr/go-blog-api/model/web"
-	repositoriesR "github.com/hutamatr/go-blog-api/repositories/role"
-	repositoriesU "github.com/hutamatr/go-blog-api/repositories/user"
+	"github.com/hutamatr/GoBlogify/exception"
+	"github.com/hutamatr/GoBlogify/helpers"
+	"github.com/hutamatr/GoBlogify/model/domain"
+	"github.com/hutamatr/GoBlogify/model/web"
+	repositoriesRole "github.com/hutamatr/GoBlogify/repositories/role"
+	repositoriesUser "github.com/hutamatr/GoBlogify/repositories/user"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type UserServiceImpl struct {
-	userRepository repositoriesU.UserRepository
-	roleRepository repositoriesR.RoleRepository
+	userRepository repositoriesUser.UserRepository
+	roleRepository repositoriesRole.RoleRepository
 	DB             *sql.DB
 	Validator      *validator.Validate
 }
 
 var env = helpers.NewEnv()
+var appEnv = env.App.AppEnv
 var accessTokenSecret = env.SecretToken.AccessSecret
 var refreshTokenSecret = env.SecretToken.RefreshSecret
 
-func NewUserService(userRepository repositoriesU.UserRepository, roleRepository repositoriesR.RoleRepository, db *sql.DB, validator *validator.Validate) UserService {
+func NewUserService(userRepository repositoriesUser.UserRepository, roleRepository repositoriesRole.RoleRepository, db *sql.DB, validator *validator.Validate) UserService {
 	return &UserServiceImpl{
 		userRepository: userRepository,
 		roleRepository: roleRepository,
@@ -71,7 +72,9 @@ func (service *UserServiceImpl) SignUp(ctx context.Context, request web.UserCrea
 
 	newUser = service.userRepository.Save(ctx, tx, newUser)
 
-	accessToken, err := helpers.GenerateToken(request.Username, 5*time.Minute, accessTokenSecret)
+	accessTokenExpired := helpers.AccessTokenDuration(appEnv)
+
+	accessToken, err := helpers.GenerateToken(request.Username, accessTokenExpired, accessTokenSecret)
 	helpers.PanicError(err)
 
 	refreshToken, err := helpers.GenerateToken(request.Username, 168*time.Hour, refreshTokenSecret)
@@ -97,7 +100,9 @@ func (service *UserServiceImpl) SignIn(ctx context.Context, request web.UserLogi
 
 	user := service.userRepository.FindOne(ctx, tx, 0, request.Email)
 
-	accessToken, err := helpers.GenerateToken(user.Username, 5*time.Minute, accessTokenSecret)
+	accessTokenExpired := helpers.AccessTokenDuration(appEnv)
+
+	accessToken, err := helpers.GenerateToken(user.Username, accessTokenExpired, accessTokenSecret)
 	helpers.PanicError(err)
 
 	refreshToken, err := helpers.GenerateToken(user.Username, 168*time.Hour, refreshTokenSecret)

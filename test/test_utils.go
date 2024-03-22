@@ -8,20 +8,20 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	_ "github.com/go-sql-driver/mysql"
-	controllersA "github.com/hutamatr/go-blog-api/controllers/article"
-	controllersC "github.com/hutamatr/go-blog-api/controllers/category"
-	controllersR "github.com/hutamatr/go-blog-api/controllers/role"
-	controllersU "github.com/hutamatr/go-blog-api/controllers/user"
-	"github.com/hutamatr/go-blog-api/helpers"
-	repositoriesA "github.com/hutamatr/go-blog-api/repositories/article"
-	repositoriesC "github.com/hutamatr/go-blog-api/repositories/category"
-	repositoriesR "github.com/hutamatr/go-blog-api/repositories/role"
-	repositoriesU "github.com/hutamatr/go-blog-api/repositories/user"
-	"github.com/hutamatr/go-blog-api/routes"
-	servicesA "github.com/hutamatr/go-blog-api/services/article"
-	servicesC "github.com/hutamatr/go-blog-api/services/category"
-	servicesR "github.com/hutamatr/go-blog-api/services/role"
-	servicesU "github.com/hutamatr/go-blog-api/services/user"
+	controllersC "github.com/hutamatr/GoBlogify/controllers/category"
+	controllersP "github.com/hutamatr/GoBlogify/controllers/post"
+	controllersR "github.com/hutamatr/GoBlogify/controllers/role"
+	controllersU "github.com/hutamatr/GoBlogify/controllers/user"
+	"github.com/hutamatr/GoBlogify/helpers"
+	repositoriesC "github.com/hutamatr/GoBlogify/repositories/category"
+	repositoriesP "github.com/hutamatr/GoBlogify/repositories/post"
+	repositoriesR "github.com/hutamatr/GoBlogify/repositories/role"
+	repositoriesU "github.com/hutamatr/GoBlogify/repositories/user"
+	"github.com/hutamatr/GoBlogify/routes"
+	servicesC "github.com/hutamatr/GoBlogify/services/category"
+	servicesP "github.com/hutamatr/GoBlogify/services/post"
+	servicesR "github.com/hutamatr/GoBlogify/services/role"
+	servicesU "github.com/hutamatr/GoBlogify/services/user"
 	"github.com/joho/godotenv"
 )
 
@@ -50,7 +50,7 @@ func ConnectDBTest() *sql.DB {
 }
 
 func DeleteDBTest(db *sql.DB) {
-	_, err := db.Exec("DELETE FROM article")
+	_, err := db.Exec("DELETE FROM post")
 	helpers.PanicError(err)
 	_, err = db.Exec("DELETE FROM category")
 	helpers.PanicError(err)
@@ -67,9 +67,9 @@ func SetupRouterTest(db *sql.DB) http.Handler {
 	roleService := servicesR.NewRoleService(roleRepository, db, validator)
 	roleController := controllersR.NewRoleController(roleService)
 
-	articleRepository := repositoriesA.NewArticleRepository()
-	articleService := servicesA.NewArticleService(articleRepository, db, validator)
-	articleController := controllersA.NewArticleController(articleService)
+	PostRepository := repositoriesP.NewPostRepository()
+	PostService := servicesP.NewPostService(PostRepository, db, validator)
+	PostController := controllersP.NewPostController(PostService)
 
 	categoryRepository := repositoriesC.NewCategoryRepository()
 	categoryService := servicesC.NewCategoryService(categoryRepository, db, validator)
@@ -80,7 +80,7 @@ func SetupRouterTest(db *sql.DB) http.Handler {
 	UserController := controllersU.NewUserController(userService)
 
 	router := routes.Router(&routes.RouterControllers{
-		ArticleController:  articleController,
+		PostController:     PostController,
 		CategoryController: categoryController,
 		RoleController:     roleController,
 		UserController:     UserController,

@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/hutamatr/go-blog-api/exception"
-	"github.com/hutamatr/go-blog-api/helpers"
-	"github.com/hutamatr/go-blog-api/model/domain"
+	"github.com/hutamatr/GoBlogify/exception"
+	"github.com/hutamatr/GoBlogify/helpers"
+	"github.com/hutamatr/GoBlogify/model/domain"
 )
 
 type UserRepositoryImpl struct {
@@ -40,7 +40,7 @@ func (repository *UserRepositoryImpl) FindAll(ctx context.Context, tx *sql.Tx) [
 	ctxC, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	query := "SELECT id, username, email,first_name, last_name, role_id, created_at, updated_at, deleted_at FROM user WHERE deleted = false LIMIT 10"
+	query := "SELECT id, username, email, first_name, last_name, role_id, created_at, updated_at, deleted_at FROM user WHERE is_deleted = false LIMIT 10"
 
 	rows, err := tx.QueryContext(ctxC, query)
 
@@ -92,11 +92,11 @@ func (repository *UserRepositoryImpl) FindOne(ctx context.Context, tx *sql.Tx, u
 	var err error
 
 	if userId > 0 {
-		query := "SELECT id, username, email, first_name, last_name, role_id, created_at, updated_at, deleted_at FROM user WHERE id = ? AND deleted = false"
+		query := "SELECT id, username, email, first_name, last_name, role_id, created_at, updated_at, deleted_at FROM user WHERE id = ? AND is_deleted = false"
 		rows, err = tx.QueryContext(ctxC, query, userId)
 		helpers.PanicError(err)
 	} else if email != "" {
-		query := "SELECT id, username, email, first_name, last_name, role_id, created_at, updated_at, deleted_at FROM user WHERE email = ? AND deleted = false"
+		query := "SELECT id, username, email, first_name, last_name, role_id, created_at, updated_at, deleted_at FROM user WHERE email = ? AND is_deleted = false"
 		rows, err = tx.QueryContext(ctxC, query, email)
 		helpers.PanicError(err)
 	} else {
@@ -147,11 +147,11 @@ func (repository *UserRepositoryImpl) Update(ctx context.Context, tx *sql.Tx, us
 	var err error
 
 	if user.Id > 0 {
-		query := "UPDATE user SET username = ?, first_name = ?, last_name = ? WHERE id = ? AND deleted = false"
+		query := "UPDATE user SET username = ?, first_name = ?, last_name = ? WHERE id = ? AND is_deleted = false"
 		result, err = tx.ExecContext(ctxC, query, user.Username, user.First_Name, user.Last_Name, user.Id)
 		helpers.PanicError(err)
 	} else if user.Email != "" {
-		query := "UPDATE user SET username = ?, first_name = ?, last_name = ? WHERE email = ? AND deleted = false"
+		query := "UPDATE user SET username = ?, first_name = ?, last_name = ? WHERE email = ? AND is_deleted = false"
 		result, err = tx.ExecContext(ctxC, query, user.Username, user.First_Name, user.Last_Name, user.Email)
 		helpers.PanicError(err)
 	}
@@ -169,7 +169,7 @@ func (repository *UserRepositoryImpl) Delete(ctx context.Context, tx *sql.Tx, us
 	ctxC, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	query := "UPDATE user SET deleted_at = NOW(), deleted = true WHERE id = ?"
+	query := "UPDATE user SET deleted_at = NOW(), is_deleted = true WHERE id = ?"
 	_, err := tx.ExecContext(ctxC, query, userId)
 	helpers.PanicError(err)
 }
@@ -178,7 +178,7 @@ func (repository *UserRepositoryImpl) FindPassword(ctx context.Context, tx *sql.
 	ctxC, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	query := "SELECT password FROM user WHERE email = ? AND deleted = false"
+	query := "SELECT password FROM user WHERE email = ? AND is_deleted = false"
 	rows, err := tx.QueryContext(ctxC, query, email)
 	helpers.PanicError(err)
 
