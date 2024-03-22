@@ -6,22 +6,25 @@ import (
 	"os"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/hutamatr/go-blog-api/app"
-	controllersA "github.com/hutamatr/go-blog-api/controllers/article"
-	controllersC "github.com/hutamatr/go-blog-api/controllers/category"
-	controllersR "github.com/hutamatr/go-blog-api/controllers/role"
-	controllersU "github.com/hutamatr/go-blog-api/controllers/user"
-	"github.com/hutamatr/go-blog-api/helpers"
-	"github.com/hutamatr/go-blog-api/middleware"
-	repositoriesA "github.com/hutamatr/go-blog-api/repositories/article"
-	repositoriesC "github.com/hutamatr/go-blog-api/repositories/category"
-	repositoriesR "github.com/hutamatr/go-blog-api/repositories/role"
-	repositoriesU "github.com/hutamatr/go-blog-api/repositories/user"
-	"github.com/hutamatr/go-blog-api/routes"
-	servicesA "github.com/hutamatr/go-blog-api/services/article"
-	servicesC "github.com/hutamatr/go-blog-api/services/category"
-	servicesR "github.com/hutamatr/go-blog-api/services/role"
-	servicesU "github.com/hutamatr/go-blog-api/services/user"
+	"github.com/hutamatr/GoBlogify/app"
+	controllersCategory "github.com/hutamatr/GoBlogify/controllers/category"
+	controllersComment "github.com/hutamatr/GoBlogify/controllers/comment"
+	controllersPost "github.com/hutamatr/GoBlogify/controllers/post"
+	controllersRole "github.com/hutamatr/GoBlogify/controllers/role"
+	controllersUser "github.com/hutamatr/GoBlogify/controllers/user"
+	"github.com/hutamatr/GoBlogify/helpers"
+	"github.com/hutamatr/GoBlogify/middleware"
+	repositoriesCategory "github.com/hutamatr/GoBlogify/repositories/category"
+	repositoriesComment "github.com/hutamatr/GoBlogify/repositories/comment"
+	repositoriesPost "github.com/hutamatr/GoBlogify/repositories/post"
+	repositoriesRole "github.com/hutamatr/GoBlogify/repositories/role"
+	repositoriesUser "github.com/hutamatr/GoBlogify/repositories/user"
+	"github.com/hutamatr/GoBlogify/routes"
+	servicesCategory "github.com/hutamatr/GoBlogify/services/category"
+	servicesComment "github.com/hutamatr/GoBlogify/services/comment"
+	servicesPost "github.com/hutamatr/GoBlogify/services/post"
+	servicesRole "github.com/hutamatr/GoBlogify/services/role"
+	servicesUser "github.com/hutamatr/GoBlogify/services/user"
 
 	"github.com/joho/godotenv"
 )
@@ -44,27 +47,32 @@ func main() {
 	db := app.ConnectDB()
 	validator := validator.New(validator.WithRequiredStructEnabled())
 
-	roleRepository := repositoriesR.NewRoleRepository()
-	roleService := servicesR.NewRoleService(roleRepository, db, validator)
-	roleController := controllersR.NewRoleController(roleService)
+	roleRepository := repositoriesRole.NewRoleRepository()
+	roleService := servicesRole.NewRoleService(roleRepository, db, validator)
+	roleController := controllersRole.NewRoleController(roleService)
 
-	articleRepository := repositoriesA.NewArticleRepository()
-	articleService := servicesA.NewArticleService(articleRepository, db, validator)
-	articleController := controllersA.NewArticleController(articleService)
+	userRepository := repositoriesUser.NewUserRepository()
+	userService := servicesUser.NewUserService(userRepository, roleRepository, db, validator)
+	userController := controllersUser.NewUserController(userService)
 
-	categoryRepository := repositoriesC.NewCategoryRepository()
-	categoryService := servicesC.NewCategoryService(categoryRepository, db, validator)
-	categoryController := controllersC.NewCategoryController(categoryService)
+	postRepository := repositoriesPost.NewPostRepository()
+	postService := servicesPost.NewPostService(postRepository, db, validator)
+	postController := controllersPost.NewPostController(postService)
 
-	userRepository := repositoriesU.NewUserRepository()
-	userService := servicesU.NewUserService(userRepository, roleRepository, db, validator)
-	UserController := controllersU.NewUserController(userService)
+	commentRepository := repositoriesComment.NewCommentRepository()
+	commentService := servicesComment.NewCommentService(commentRepository, db, validator)
+	commentController := controllersComment.NewCommentController(commentService)
+
+	categoryRepository := repositoriesCategory.NewCategoryRepository()
+	categoryService := servicesCategory.NewCategoryService(categoryRepository, db, validator)
+	categoryController := controllersCategory.NewCategoryController(categoryService)
 
 	router := routes.Router(&routes.RouterControllers{
-		UserController:     UserController,
-		ArticleController:  articleController,
+		UserController:     userController,
+		PostController:     postController,
 		CategoryController: categoryController,
 		RoleController:     roleController,
+		CommentController:  commentController,
 	})
 
 	cors := helpers.Cors()
