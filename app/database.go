@@ -6,7 +6,7 @@ import (
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/hutamatr/go-blog-api/helpers"
+	"github.com/hutamatr/GoBlogify/helpers"
 )
 
 func ConnectDB() *sql.DB {

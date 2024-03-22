@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/hutamatr/go-blog-api/exception"
-	"github.com/hutamatr/go-blog-api/helpers"
-	"github.com/hutamatr/go-blog-api/model/domain"
+	"github.com/hutamatr/GoBlogify/exception"
+	"github.com/hutamatr/GoBlogify/helpers"
+	"github.com/hutamatr/GoBlogify/model/domain"
 )
 
 type RoleRepositoryImpl struct {

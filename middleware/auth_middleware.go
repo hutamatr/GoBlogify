@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/hutamatr/go-blog-api/helpers"
-	"github.com/hutamatr/go-blog-api/model/web"
+	"github.com/hutamatr/GoBlogify/helpers"
+	"github.com/hutamatr/GoBlogify/model/web"
 )
 
 type AuthMiddleware struct {

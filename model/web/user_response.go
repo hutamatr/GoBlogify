@@ -3,7 +3,7 @@ package web
 import (
 	"time"
 
-	"github.com/hutamatr/go-blog-api/model/domain"
+	"github.com/hutamatr/GoBlogify/model/domain"
 )
 
 type UserResponse struct {
@@ -29,5 +29,19 @@ func ToUserResponse(user domain.User) UserResponse {
 		Created_At: user.Created_At,
 		Updated_At: user.Updated_At,
 		Deleted_At: user.Deleted_At,
+	}
+}
+
+type UserCommentResponse struct {
+	Id       int    `json:"id"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+}
+
+func ToUserCommentResponse(user domain.User) UserCommentResponse {
+	return UserCommentResponse{
+		Id:       user.Id,
+		Username: user.Username,
+		Email:    user.Email,
 	}
 }

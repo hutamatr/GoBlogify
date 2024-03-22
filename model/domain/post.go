@@ -1,13 +1,15 @@
 package domain
 
-import "time"
+import (
+	"time"
+)
 
-type Article struct {
+type Post struct {
 	Id          int
+	User_Id     int
 	Category_Id int
 	Title       string
 	Body        string
-	Author      string
 	Published   bool
 	Deleted     bool
 	Created_At  time.Time
@@ -15,25 +17,25 @@ type Article struct {
 	Deleted_At  time.Time
 }
 
-type ArticleCreateOrUpdate struct {
+type PostCreateOrUpdate struct {
 	Id          int
+	User_id     int
 	Category_Id int
 	Title       string
 	Body        string
-	Author      string
 	Published   bool
 	Deleted     bool
 }
 
-type ArticleJoinCategory struct {
+type PostJoin struct {
 	Id         int
 	Title      string
 	Body       string
-	Author     string
 	Published  bool
 	Deleted    bool
 	Created_At time.Time
 	Updated_At time.Time
 	Deleted_At time.Time
+	User       User
 	Category   Category
 }

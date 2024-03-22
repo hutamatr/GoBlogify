@@ -5,23 +5,23 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/hutamatr/go-blog-api/exception"
-	"github.com/hutamatr/go-blog-api/helpers"
-	"github.com/hutamatr/go-blog-api/model/web"
-	servicesU "github.com/hutamatr/go-blog-api/services/user"
+	"github.com/hutamatr/GoBlogify/exception"
+	"github.com/hutamatr/GoBlogify/helpers"
+	"github.com/hutamatr/GoBlogify/model/web"
+	servicesUser "github.com/hutamatr/GoBlogify/services/user"
 	"github.com/julienschmidt/httprouter"
 )
 
 type UserControllerImpl struct {
-	service servicesU.UserService
+	service servicesUser.UserService
 }
 
 var env = helpers.NewEnv()
+var AppEnv = env.App.AppEnv
 var accessTokenSecret = env.SecretToken.AccessSecret
 var refreshTokenSecret = env.SecretToken.RefreshSecret
-var AppEnv = env.App.AppEnv
 
-func NewUserController(userService servicesU.UserService) UserController {
+func NewUserController(userService servicesUser.UserService) UserController {
 	return &UserControllerImpl{
 		service: userService,
 	}
@@ -37,10 +37,11 @@ func (controller *UserControllerImpl) CreateUser(writer http.ResponseWriter, req
 	cookie := http.Cookie{}
 	cookie.Name = "rt"
 	cookie.Value = refreshToken
-	cookie.MaxAge = 7 * 24 * 60 * 60 * 1000
+	cookie.MaxAge = 7 * 24 * 60 * 60
 	cookie.Secure = AppEnv == "production"
 	cookie.HttpOnly = true
 	cookie.SameSite = http.SameSiteStrictMode
+	cookie.Expires = time.Now().Add(7 * 24 * time.Hour)
 	http.SetCookie(writer, &cookie)
 
 	userResponse := web.ResponseJSON{
@@ -65,10 +66,11 @@ func (controller *UserControllerImpl) SignInUser(writer http.ResponseWriter, req
 	cookie := http.Cookie{}
 	cookie.Name = "rt"
 	cookie.Value = refreshToken
-	cookie.MaxAge = 7 * 24 * 60 * 60 * 1000
+	cookie.MaxAge = 7 * 24 * 60 * 60
 	cookie.Secure = AppEnv == "production"
 	cookie.HttpOnly = true
 	cookie.SameSite = http.SameSiteStrictMode
+	cookie.Expires = time.Now().Add(7 * 24 * time.Hour)
 	http.SetCookie(writer, &cookie)
 
 	userResponse := web.ResponseJSON{
@@ -91,6 +93,7 @@ func (controller *UserControllerImpl) SignOutUser(writer http.ResponseWriter, re
 	cookie.Secure = AppEnv == "production"
 	cookie.HttpOnly = true
 	cookie.SameSite = http.SameSiteStrictMode
+	cookie.Expires = time.Now().Add(7 * 24 * time.Hour)
 	http.SetCookie(writer, &cookie)
 
 	userResponse := web.ResponseJSON{
@@ -180,7 +183,9 @@ func (controller *UserControllerImpl) GetRefreshToken(writer http.ResponseWriter
 
 	username := claims["sub"].(string)
 
-	newAccessToken, err := helpers.GenerateToken(username, 5*time.Minute, accessTokenSecret)
+	accessTokenExpired := helpers.AccessTokenDuration(AppEnv)
+
+	newAccessToken, err := helpers.GenerateToken(username, accessTokenExpired, accessTokenSecret)
 
 	helpers.PanicError(err)
 

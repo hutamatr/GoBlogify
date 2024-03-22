@@ -10,10 +10,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hutamatr/go-blog-api/helpers"
-	"github.com/hutamatr/go-blog-api/model/domain"
-	"github.com/hutamatr/go-blog-api/model/web"
-	repositories "github.com/hutamatr/go-blog-api/repositories/role"
+	"github.com/hutamatr/GoBlogify/helpers"
+	"github.com/hutamatr/GoBlogify/model/domain"
+	"github.com/hutamatr/GoBlogify/model/web"
+	repositoriesRole "github.com/hutamatr/GoBlogify/repositories/role"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -91,7 +91,7 @@ func TestFindAllRole(t *testing.T) {
 		tx, err := db.Begin()
 		helpers.PanicError(err)
 
-		roleRepository := repositories.NewRoleRepository()
+		roleRepository := repositoriesRole.NewRoleRepository()
 		role1 := roleRepository.Save(ctx, tx, domain.Role{Name: "user"})
 		role2 := roleRepository.Save(ctx, tx, domain.Role{Name: "admin"})
 
@@ -161,7 +161,7 @@ func TestFindByIdRole(t *testing.T) {
 		tx, err := db.Begin()
 		helpers.PanicError(err)
 
-		roleRepository := repositories.NewRoleRepository()
+		roleRepository := repositoriesRole.NewRoleRepository()
 		role := roleRepository.Save(ctx, tx, domain.Role{Name: "user"})
 
 		tx.Commit()
@@ -227,7 +227,7 @@ func TestUpdateRole(t *testing.T) {
 		tx, err := db.Begin()
 		helpers.PanicError(err)
 
-		roleRepository := repositories.NewRoleRepository()
+		roleRepository := repositoriesRole.NewRoleRepository()
 		role := roleRepository.Save(ctx, tx, domain.Role{Name: "user"})
 
 		tx.Commit()
@@ -295,7 +295,7 @@ func TestUpdateRole(t *testing.T) {
 		tx, err := db.Begin()
 		helpers.PanicError(err)
 
-		roleRepository := repositories.NewRoleRepository()
+		roleRepository := repositoriesRole.NewRoleRepository()
 		role := roleRepository.Save(ctx, tx, domain.Role{Name: "user"})
 
 		tx.Commit()
@@ -341,7 +341,7 @@ func TestDeleteRole(t *testing.T) {
 		tx, err := db.Begin()
 		helpers.PanicError(err)
 
-		roleRepository := repositories.NewRoleRepository()
+		roleRepository := repositoriesRole.NewRoleRepository()
 		role := roleRepository.Save(ctx, tx, domain.Role{Name: "Role-3"})
 
 		tx.Commit()

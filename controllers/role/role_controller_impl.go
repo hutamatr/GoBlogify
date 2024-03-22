@@ -4,17 +4,17 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/hutamatr/go-blog-api/helpers"
-	"github.com/hutamatr/go-blog-api/model/web"
-	servicesR "github.com/hutamatr/go-blog-api/services/role"
+	"github.com/hutamatr/GoBlogify/helpers"
+	"github.com/hutamatr/GoBlogify/model/web"
+	servicesRole "github.com/hutamatr/GoBlogify/services/role"
 	"github.com/julienschmidt/httprouter"
 )
 
 type RoleControllerImpl struct {
-	service servicesR.RoleService
+	service servicesRole.RoleService
 }
 
-func NewRoleController(roleService servicesR.RoleService) RoleController {
+func NewRoleController(roleService servicesRole.RoleService) RoleController {
 	return &RoleControllerImpl{
 		service: roleService,
 	}

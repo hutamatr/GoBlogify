@@ -10,10 +10,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hutamatr/go-blog-api/helpers"
-	"github.com/hutamatr/go-blog-api/model/domain"
-	"github.com/hutamatr/go-blog-api/model/web"
-	repositories "github.com/hutamatr/go-blog-api/repositories/category"
+	"github.com/hutamatr/GoBlogify/helpers"
+	"github.com/hutamatr/GoBlogify/model/domain"
+	"github.com/hutamatr/GoBlogify/model/web"
+	repositoriesCategory "github.com/hutamatr/GoBlogify/repositories/category"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -91,7 +91,7 @@ func TestFindAllCategory(t *testing.T) {
 		tx, err := db.Begin()
 		helpers.PanicError(err)
 
-		categoryRepository := repositories.NewCategoryRepository()
+		categoryRepository := repositoriesCategory.NewCategoryRepository()
 		category1 := categoryRepository.Save(ctx, tx, domain.Category{Name: "category-3"})
 		category2 := categoryRepository.Save(ctx, tx, domain.Category{Name: "category-4"})
 
@@ -161,7 +161,7 @@ func TestFindByIdCategory(t *testing.T) {
 		tx, err := db.Begin()
 		helpers.PanicError(err)
 
-		categoryRepository := repositories.NewCategoryRepository()
+		categoryRepository := repositoriesCategory.NewCategoryRepository()
 		category := categoryRepository.Save(ctx, tx, domain.Category{Name: "category-5"})
 
 		tx.Commit()
@@ -227,7 +227,7 @@ func TestUpdateCategory(t *testing.T) {
 		tx, err := db.Begin()
 		helpers.PanicError(err)
 
-		categoryRepository := repositories.NewCategoryRepository()
+		categoryRepository := repositoriesCategory.NewCategoryRepository()
 		category := categoryRepository.Save(ctx, tx, domain.Category{Name: "category-5"})
 
 		tx.Commit()
@@ -295,7 +295,7 @@ func TestUpdateCategory(t *testing.T) {
 		tx, err := db.Begin()
 		helpers.PanicError(err)
 
-		categoryRepository := repositories.NewCategoryRepository()
+		categoryRepository := repositoriesCategory.NewCategoryRepository()
 		category := categoryRepository.Save(ctx, tx, domain.Category{Name: "category-5"})
 
 		tx.Commit()
@@ -341,7 +341,7 @@ func TestDeleteCategory(t *testing.T) {
 		tx, err := db.Begin()
 		helpers.PanicError(err)
 
-		categoryRepository := repositories.NewCategoryRepository()
+		categoryRepository := repositoriesCategory.NewCategoryRepository()
 		category := categoryRepository.Save(ctx, tx, domain.Category{Name: "category-3"})
 
 		tx.Commit()
