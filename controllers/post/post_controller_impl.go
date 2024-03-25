@@ -26,12 +26,12 @@ func (controller *PostControllerImpl) CreatePost(writer http.ResponseWriter, req
 
 	post := controller.service.Create(request.Context(), postRequest)
 
-	writer.WriteHeader(http.StatusCreated)
 	postResponse := web.ResponseJSON{
 		Code:   http.StatusCreated,
 		Status: "CREATED",
 		Data:   post,
 	}
+	writer.WriteHeader(http.StatusCreated)
 
 	helpers.EncodeJSONFromResponse(writer, postResponse)
 }

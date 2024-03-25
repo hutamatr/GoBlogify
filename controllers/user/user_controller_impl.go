@@ -52,6 +52,7 @@ func (controller *UserControllerImpl) CreateUser(writer http.ResponseWriter, req
 			"user":         newUser,
 		},
 	}
+	writer.WriteHeader(http.StatusCreated)
 
 	helpers.EncodeJSONFromResponse(writer, userResponse)
 }

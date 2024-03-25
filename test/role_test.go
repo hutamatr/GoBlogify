@@ -37,7 +37,7 @@ func TestCreateRole(t *testing.T) {
 
 		response := recorder.Result()
 
-		assert.Equal(t, http.StatusOK, response.StatusCode)
+		assert.Equal(t, http.StatusCreated, response.StatusCode)
 
 		body, err := io.ReadAll(response.Body)
 
