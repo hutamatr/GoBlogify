@@ -31,6 +31,7 @@ func (controller *RoleControllerImpl) CreateRole(writer http.ResponseWriter, req
 		Status: "CREATED",
 		Data:   role,
 	}
+	writer.WriteHeader(http.StatusCreated)
 
 	helpers.EncodeJSONFromResponse(writer, roleResponse)
 }

@@ -2,6 +2,7 @@ package test
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -13,22 +14,48 @@ import (
 	"github.com/hutamatr/GoBlogify/helpers"
 	"github.com/hutamatr/GoBlogify/model/domain"
 	"github.com/hutamatr/GoBlogify/model/web"
-	repositoriesRole "github.com/hutamatr/GoBlogify/repositories/role"
+
+	repositoriesComment "github.com/hutamatr/GoBlogify/repositories/comment"
+	repositoriesPost "github.com/hutamatr/GoBlogify/repositories/post"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCreateRole(t *testing.T) {
+func createPostTestComment(db *sql.DB, userId int, categoryId int) domain.PostJoin {
+	ctx := context.Background()
+	tx, err := db.Begin()
+	helpers.PanicError(err)
+	defer tx.Commit()
+
+	postRepository := repositoriesPost.NewPostRepository()
+	post := postRepository.Save(ctx, tx, domain.Post{
+		Title:       "Post-1",
+		Body:        "Body-1",
+		Published:   true,
+		User_Id:     userId,
+		Category_Id: categoryId,
+	})
+
+	return post
+}
+
+func TestCreateComment(t *testing.T) {
 	db := ConnectDBTest()
 	DeleteDBTest(db)
 	router := SetupRouterTest(db)
 	defer db.Close()
 
-	t.Run("success create role", func(t *testing.T) {
-		roleBody := strings.NewReader(`{
-			"name": "user"
+	user := createUserTestUser(db)
+	category := createCategoryTestPost(db)
+	post := createPostTestComment(db, user.Id, category.Id)
+
+	t.Run("success create comment", func(t *testing.T) {
+		commentBody := strings.NewReader(`{
+			"content": "comment-1",
+			"user_id": ` + strconv.Itoa(user.Id) + `,
+			"post_id": ` + strconv.Itoa(post.Id) + `
 		}`)
 
-		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/role", roleBody)
+		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/comment", commentBody)
 		request.Header.Add("Content-Type", "application/json")
 
 		recorder := httptest.NewRecorder()
@@ -49,14 +76,19 @@ func TestCreateRole(t *testing.T) {
 
 		assert.Equal(t, http.StatusCreated, responseBody.Code)
 		assert.Equal(t, "CREATED", responseBody.Status)
-		assert.Equal(t, "user", responseBody.Data.(map[string]interface{})["name"])
+		assert.Equal(t, "comment-1", responseBody.Data.(map[string]interface{})["content"])
+		assert.Equal(t, post.Id, int(responseBody.Data.(map[string]interface{})["post_id"].(float64)))
+		assert.Equal(t, user.Id, int(responseBody.Data.(map[string]interface{})["user_id"].(float64)))
 	})
 
-	t.Run("bad request create role", func(t *testing.T) {
-		roleBody := strings.NewReader(`{
-			"name": ""
+	t.Run("bad request create comment", func(t *testing.T) {
+		commentBody := strings.NewReader(`{
+			"content": "",
+			"user_id": ` + strconv.Itoa(user.Id) + `,
+			"post_id": ` + strconv.Itoa(post.Id) + `
 		}`)
-		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/role", roleBody)
+
+		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/comment", commentBody)
 		request.Header.Add("Content-Type", "application/json")
 
 		recorder := httptest.NewRecorder()
@@ -80,24 +112,31 @@ func TestCreateRole(t *testing.T) {
 	})
 }
 
-func TestFindAllRole(t *testing.T) {
+func TestFindCommentByPost(t *testing.T) {
 	db := ConnectDBTest()
 	DeleteDBTest(db)
 	router := SetupRouterTest(db)
 	defer db.Close()
 
-	t.Run("success find all role", func(t *testing.T) {
+	category := createCategoryTestPost(db)
+	user := createUserTestUser(db)
+	post := createPostTestComment(db, user.Id, category.Id)
+
+	t.Run("success find comment by post", func(t *testing.T) {
 		ctx := context.Background()
 		tx, err := db.Begin()
 		helpers.PanicError(err)
 
-		roleRepository := repositoriesRole.NewRoleRepository()
-		role1 := roleRepository.Save(ctx, tx, domain.Role{Name: "user"})
-		role2 := roleRepository.Save(ctx, tx, domain.Role{Name: "admin"})
+		commentRepository := repositoriesComment.NewCommentRepository()
+		comment := commentRepository.Save(ctx, tx, domain.Comment{
+			Content: "comment-1",
+			User_Id: user.Id,
+			Post_Id: post.Id,
+		})
 
 		tx.Commit()
 
-		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/role", nil)
+		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/comment?postId="+strconv.Itoa(post.Id), nil)
 		request.Header.Add("Content-Type", "application/json")
 
 		recorder := httptest.NewRecorder()
@@ -118,14 +157,14 @@ func TestFindAllRole(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, responseBody.Code)
 		assert.Equal(t, "OK", responseBody.Status)
-		assert.Equal(t, role1.Name, responseBody.Data.([]interface{})[0].(map[string]interface{})["name"])
-		assert.Equal(t, role2.Name, responseBody.Data.([]interface{})[1].(map[string]interface{})["name"])
+		assert.Equal(t, comment.Content, responseBody.Data.([]interface{})[0].(map[string]interface{})["content"])
+
 	})
 
-	t.Run("empty find all role", func(t *testing.T) {
+	t.Run("empty find comment by post", func(t *testing.T) {
 		DeleteDBTest(db)
 
-		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/role", nil)
+		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/comment?postId="+strconv.Itoa(post.Id), nil)
 		request.Header.Add("Content-Type", "application/json")
 
 		recorder := httptest.NewRecorder()
@@ -150,23 +189,31 @@ func TestFindAllRole(t *testing.T) {
 	})
 }
 
-func TestFindByIdRole(t *testing.T) {
+func TestFindCommentById(t *testing.T) {
 	db := ConnectDBTest()
 	DeleteDBTest(db)
 	router := SetupRouterTest(db)
 	defer db.Close()
 
-	t.Run("success find by id role", func(t *testing.T) {
+	category := createCategoryTestPost(db)
+	user := createUserTestUser(db)
+	post := createPostTestComment(db, user.Id, category.Id)
+
+	t.Run("success find comment by id", func(t *testing.T) {
 		ctx := context.Background()
 		tx, err := db.Begin()
 		helpers.PanicError(err)
 
-		roleRepository := repositoriesRole.NewRoleRepository()
-		role := roleRepository.Save(ctx, tx, domain.Role{Name: "user"})
+		commentRepository := repositoriesComment.NewCommentRepository()
+		comment := commentRepository.Save(ctx, tx, domain.Comment{
+			Content: "comment-1",
+			User_Id: user.Id,
+			Post_Id: post.Id,
+		})
 
 		tx.Commit()
 
-		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/role/"+strconv.Itoa(role.Id), nil)
+		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/comment/"+strconv.Itoa(comment.Id), nil)
 		request.Header.Add("Content-Type", "application/json")
 
 		recorder := httptest.NewRecorder()
@@ -187,11 +234,11 @@ func TestFindByIdRole(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, responseBody.Code)
 		assert.Equal(t, "OK", responseBody.Status)
-		assert.Equal(t, role.Name, responseBody.Data.(map[string]interface{})["name"])
+		assert.Equal(t, comment.Content, responseBody.Data.(map[string]interface{})["content"])
 	})
 
-	t.Run("not found find by id role", func(t *testing.T) {
-		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/role/1", nil)
+	t.Run("not found find comment by id", func(t *testing.T) {
+		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/comment/1", nil)
 		request.Header.Add("Content-Type", "application/json")
 
 		recorder := httptest.NewRecorder()
@@ -212,31 +259,41 @@ func TestFindByIdRole(t *testing.T) {
 
 		assert.Equal(t, http.StatusNotFound, responseBody.Code)
 		assert.Equal(t, "Not Found", responseBody.Status)
-		assert.Equal(t, "role not found", responseBody.Data)
+		assert.Equal(t, "comment not found", responseBody.Data)
 	})
 }
 
-func TestUpdateRole(t *testing.T) {
+func TestUpdateComment(t *testing.T) {
 	db := ConnectDBTest()
 	DeleteDBTest(db)
 	router := SetupRouterTest(db)
 	defer db.Close()
 
-	t.Run("success update role", func(t *testing.T) {
+	category := createCategoryTestPost(db)
+	user := createUserTestUser(db)
+	post := createPostTestComment(db, user.Id, category.Id)
+
+	t.Run("success update comment", func(t *testing.T) {
 		ctx := context.Background()
 		tx, err := db.Begin()
 		helpers.PanicError(err)
 
-		roleRepository := repositoriesRole.NewRoleRepository()
-		role := roleRepository.Save(ctx, tx, domain.Role{Name: "user"})
+		commentRepository := repositoriesComment.NewCommentRepository()
+		comment := commentRepository.Save(ctx, tx, domain.Comment{
+			Content: "comment-1",
+			User_Id: user.Id,
+			Post_Id: post.Id,
+		})
 
 		tx.Commit()
 
-		roleBody := strings.NewReader(`{
-			"name": "admin"
+		commentBody := strings.NewReader(`{
+			"content": "comment-2",
+			"user_id": ` + strconv.Itoa(user.Id) + `,
+			"post_id": ` + strconv.Itoa(post.Id) + `
 		}`)
 
-		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/role/"+strconv.Itoa(role.Id), roleBody)
+		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/comment/"+strconv.Itoa(comment.Id), commentBody)
 		request.Header.Add("Content-Type", "application/json")
 
 		recorder := httptest.NewRecorder()
@@ -257,16 +314,17 @@ func TestUpdateRole(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, responseBody.Code)
 		assert.Equal(t, "UPDATED", responseBody.Status)
-		assert.Equal(t, "admin", responseBody.Data.(map[string]interface{})["name"])
+		assert.Equal(t, "comment-2", responseBody.Data.(map[string]interface{})["content"])
 	})
 
-	t.Run("not found update role", func(t *testing.T) {
-
-		roleBody := strings.NewReader(`{
-			"name": "user"
+	t.Run("not found update comment", func(t *testing.T) {
+		commentBody := strings.NewReader(`{
+			"content": "comment-2",
+			"user_id": ` + strconv.Itoa(user.Id) + `,
+			"post_id": ` + strconv.Itoa(post.Id) + `
 		}`)
 
-		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/role/1", roleBody)
+		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/comment/1", commentBody)
 		request.Header.Add("Content-Type", "application/json")
 
 		recorder := httptest.NewRecorder()
@@ -287,24 +345,30 @@ func TestUpdateRole(t *testing.T) {
 
 		assert.Equal(t, http.StatusNotFound, responseBody.Code)
 		assert.Equal(t, "Not Found", responseBody.Status)
-		assert.Equal(t, "role not found", responseBody.Data)
+		assert.Equal(t, "comment not found", responseBody.Data)
 	})
 
-	t.Run("bad request update role", func(t *testing.T) {
+	t.Run("bad request update comment", func(t *testing.T) {
 		ctx := context.Background()
 		tx, err := db.Begin()
 		helpers.PanicError(err)
 
-		roleRepository := repositoriesRole.NewRoleRepository()
-		role := roleRepository.Save(ctx, tx, domain.Role{Name: "user"})
+		commentRepository := repositoriesComment.NewCommentRepository()
+		comment := commentRepository.Save(ctx, tx, domain.Comment{
+			Content: "comment-1",
+			User_Id: user.Id,
+			Post_Id: post.Id,
+		})
 
 		tx.Commit()
 
-		RoleBody := strings.NewReader(`{
-			"name": ""
+		commentBody := strings.NewReader(`{
+			"content": "",
+			"user_id": ` + strconv.Itoa(user.Id) + `,
+			"post_id": ` + strconv.Itoa(post.Id) + `
 		}`)
 
-		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/role/"+strconv.Itoa(role.Id), RoleBody)
+		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/comment/"+strconv.Itoa(comment.Id), commentBody)
 		request.Header.Add("Content-Type", "application/json")
 
 		recorder := httptest.NewRecorder()
@@ -325,28 +389,35 @@ func TestUpdateRole(t *testing.T) {
 
 		assert.Equal(t, http.StatusBadRequest, responseBody.Code)
 		assert.Equal(t, "Bad Request", responseBody.Status)
-		assert.Equal(t, "Key: 'RoleUpdateRequest.Name' Error:Field validation for 'Name' failed on the 'required' tag", responseBody.Data)
 	})
 
 }
 
-func TestDeleteRole(t *testing.T) {
+func TestDeleteComment(t *testing.T) {
 	db := ConnectDBTest()
 	DeleteDBTest(db)
 	router := SetupRouterTest(db)
 	defer db.Close()
 
-	t.Run("success delete role", func(t *testing.T) {
+	category := createCategoryTestPost(db)
+	user := createUserTestUser(db)
+	post := createPostTestComment(db, user.Id, category.Id)
+
+	t.Run("success delete comment", func(t *testing.T) {
 		ctx := context.Background()
 		tx, err := db.Begin()
 		helpers.PanicError(err)
 
-		roleRepository := repositoriesRole.NewRoleRepository()
-		role := roleRepository.Save(ctx, tx, domain.Role{Name: "Role-3"})
+		commentRepository := repositoriesComment.NewCommentRepository()
+		comment := commentRepository.Save(ctx, tx, domain.Comment{
+			Content: "comment-1",
+			User_Id: user.Id,
+			Post_Id: post.Id,
+		})
 
 		tx.Commit()
 
-		request := httptest.NewRequest(http.MethodDelete, "http://localhost:8080/api/role/"+strconv.Itoa(role.Id), nil)
+		request := httptest.NewRequest(http.MethodDelete, "http://localhost:8080/api/comment/"+strconv.Itoa(comment.Id), nil)
 		request.Header.Add("Content-Type", "application/json")
 
 		recorder := httptest.NewRecorder()
@@ -369,8 +440,8 @@ func TestDeleteRole(t *testing.T) {
 		assert.Equal(t, "DELETED", responseBody.Status)
 	})
 
-	t.Run("not found delete Role", func(t *testing.T) {
-		request := httptest.NewRequest(http.MethodDelete, "http://localhost:8080/api/role/1", nil)
+	t.Run("not found delete comment", func(t *testing.T) {
+		request := httptest.NewRequest(http.MethodDelete, "http://localhost:8080/api/comment/100", nil)
 		request.Header.Add("Content-Type", "application/json")
 
 		recorder := httptest.NewRecorder()

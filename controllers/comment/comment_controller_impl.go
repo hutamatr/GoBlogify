@@ -32,6 +32,8 @@ func (controller *CommentControllerImpl) CreateComment(writer http.ResponseWrite
 		Data:   comment,
 	}
 
+	writer.WriteHeader(http.StatusCreated)
+
 	helpers.EncodeJSONFromResponse(writer, CommentResponse)
 }
 

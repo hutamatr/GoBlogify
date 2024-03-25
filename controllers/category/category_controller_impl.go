@@ -31,6 +31,7 @@ func (controller *CategoryControllerImpl) CreateCategory(writer http.ResponseWri
 		Status: "CREATED",
 		Data:   category,
 	}
+	writer.WriteHeader(http.StatusCreated)
 
 	helpers.EncodeJSONFromResponse(writer, CategoryResponse)
 }
