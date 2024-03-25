@@ -8,20 +8,23 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	_ "github.com/go-sql-driver/mysql"
-	controllersC "github.com/hutamatr/GoBlogify/controllers/category"
-	controllersP "github.com/hutamatr/GoBlogify/controllers/post"
-	controllersR "github.com/hutamatr/GoBlogify/controllers/role"
-	controllersU "github.com/hutamatr/GoBlogify/controllers/user"
+	controllersCategory "github.com/hutamatr/GoBlogify/controllers/category"
+	controllersComment "github.com/hutamatr/GoBlogify/controllers/comment"
+	controllersPost "github.com/hutamatr/GoBlogify/controllers/post"
+	controllersRole "github.com/hutamatr/GoBlogify/controllers/role"
+	controllersUser "github.com/hutamatr/GoBlogify/controllers/user"
 	"github.com/hutamatr/GoBlogify/helpers"
-	repositoriesC "github.com/hutamatr/GoBlogify/repositories/category"
-	repositoriesP "github.com/hutamatr/GoBlogify/repositories/post"
-	repositoriesR "github.com/hutamatr/GoBlogify/repositories/role"
-	repositoriesU "github.com/hutamatr/GoBlogify/repositories/user"
+	repositoriesCategory "github.com/hutamatr/GoBlogify/repositories/category"
+	repositoriesComment "github.com/hutamatr/GoBlogify/repositories/comment"
+	repositoriesPost "github.com/hutamatr/GoBlogify/repositories/post"
+	repositoriesRole "github.com/hutamatr/GoBlogify/repositories/role"
+	repositoriesUser "github.com/hutamatr/GoBlogify/repositories/user"
 	"github.com/hutamatr/GoBlogify/routes"
-	servicesC "github.com/hutamatr/GoBlogify/services/category"
-	servicesP "github.com/hutamatr/GoBlogify/services/post"
-	servicesR "github.com/hutamatr/GoBlogify/services/role"
-	servicesU "github.com/hutamatr/GoBlogify/services/user"
+	servicesCategory "github.com/hutamatr/GoBlogify/services/category"
+	servicesComment "github.com/hutamatr/GoBlogify/services/comment"
+	servicesPost "github.com/hutamatr/GoBlogify/services/post"
+	servicesRole "github.com/hutamatr/GoBlogify/services/role"
+	servicesUser "github.com/hutamatr/GoBlogify/services/user"
 	"github.com/joho/godotenv"
 )
 
@@ -50,7 +53,9 @@ func ConnectDBTest() *sql.DB {
 }
 
 func DeleteDBTest(db *sql.DB) {
-	_, err := db.Exec("DELETE FROM post")
+	_, err := db.Exec("DELETE FROM comment")
+	helpers.PanicError(err)
+	_, err = db.Exec("DELETE FROM post")
 	helpers.PanicError(err)
 	_, err = db.Exec("DELETE FROM category")
 	helpers.PanicError(err)
@@ -63,27 +68,32 @@ func DeleteDBTest(db *sql.DB) {
 func SetupRouterTest(db *sql.DB) http.Handler {
 	validator := validator.New()
 
-	roleRepository := repositoriesR.NewRoleRepository()
-	roleService := servicesR.NewRoleService(roleRepository, db, validator)
-	roleController := controllersR.NewRoleController(roleService)
+	roleRepository := repositoriesRole.NewRoleRepository()
+	roleService := servicesRole.NewRoleService(roleRepository, db, validator)
+	roleController := controllersRole.NewRoleController(roleService)
 
-	PostRepository := repositoriesP.NewPostRepository()
-	PostService := servicesP.NewPostService(PostRepository, db, validator)
-	PostController := controllersP.NewPostController(PostService)
+	PostRepository := repositoriesPost.NewPostRepository()
+	PostService := servicesPost.NewPostService(PostRepository, db, validator)
+	PostController := controllersPost.NewPostController(PostService)
 
-	categoryRepository := repositoriesC.NewCategoryRepository()
-	categoryService := servicesC.NewCategoryService(categoryRepository, db, validator)
-	categoryController := controllersC.NewCategoryController(categoryService)
+	categoryRepository := repositoriesCategory.NewCategoryRepository()
+	categoryService := servicesCategory.NewCategoryService(categoryRepository, db, validator)
+	categoryController := controllersCategory.NewCategoryController(categoryService)
 
-	userRepository := repositoriesU.NewUserRepository()
-	userService := servicesU.NewUserService(userRepository, roleRepository, db, validator)
-	UserController := controllersU.NewUserController(userService)
+	commentRepository := repositoriesComment.NewCommentRepository()
+	commentService := servicesComment.NewCommentService(commentRepository, db, validator)
+	commentController := controllersComment.NewCommentController(commentService)
+
+	userRepository := repositoriesUser.NewUserRepository()
+	userService := servicesUser.NewUserService(userRepository, roleRepository, db, validator)
+	UserController := controllersUser.NewUserController(userService)
 
 	router := routes.Router(&routes.RouterControllers{
 		PostController:     PostController,
 		CategoryController: categoryController,
 		RoleController:     roleController,
 		UserController:     UserController,
+		CommentController:  commentController,
 	})
 
 	return router
