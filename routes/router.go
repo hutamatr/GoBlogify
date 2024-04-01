@@ -3,6 +3,7 @@ package routes
 import (
 	"net/http"
 
+	controllersAdmin "github.com/hutamatr/GoBlogify/controllers/admin"
 	controllersCategory "github.com/hutamatr/GoBlogify/controllers/category"
 	controllersComment "github.com/hutamatr/GoBlogify/controllers/comment"
 	controllersPost "github.com/hutamatr/GoBlogify/controllers/post"
@@ -15,6 +16,7 @@ import (
 )
 
 type RouterControllers struct {
+	AdminController    controllersAdmin.AdminController
 	UserController     controllersUser.UserController
 	PostController     controllersPost.PostController
 	CategoryController controllersCategory.CategoryController
@@ -24,6 +26,9 @@ type RouterControllers struct {
 
 func Router(routerControllers *RouterControllers) *httprouter.Router {
 	router := httprouter.New()
+
+	router.POST("/api/signup-admin", routerControllers.AdminController.CreateAdmin)
+	router.POST("/api/signin-admin", routerControllers.AdminController.SignInAdmin)
 
 	router.POST("/api/signup", routerControllers.UserController.CreateUser)
 	router.POST("/api/signin", routerControllers.UserController.SignInUser)
