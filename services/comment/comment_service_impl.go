@@ -44,24 +44,25 @@ func (service *CommentServiceImpl) Create(ctx context.Context, request web.Comme
 	return web.ToCommentResponse(createdComment)
 }
 
-func (service *CommentServiceImpl) FindCommentsByPost(ctx context.Context, PostId, offset int) []web.CommentResponse {
+func (service *CommentServiceImpl) FindCommentsByPost(ctx context.Context, postId, limit, offset int) ([]web.CommentResponse, int) {
 	tx, err := service.db.Begin()
 	helpers.PanicError(err)
 	defer helpers.TxRollbackCommit(tx)
 
-	comments := service.repository.FindCommentsByPost(ctx, tx, PostId, offset)
+	comments := service.repository.FindCommentsByPost(ctx, tx, postId, limit, offset)
+	countComments := service.repository.CountCommentsByPost(ctx, tx, postId)
 
 	var commentsData []web.CommentResponse
 
 	if len(comments) == 0 {
-		return commentsData
+		return commentsData, 0
 	}
 
 	for _, comment := range comments {
 		commentsData = append(commentsData, web.ToCommentResponse(comment))
 	}
 
-	return commentsData
+	return commentsData, countComments
 }
 
 func (service *CommentServiceImpl) FindById(ctx context.Context, commentId int) web.CommentResponse {
