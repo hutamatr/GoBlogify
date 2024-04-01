@@ -8,18 +8,21 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	_ "github.com/go-sql-driver/mysql"
+	controllersAdmin "github.com/hutamatr/GoBlogify/controllers/admin"
 	controllersCategory "github.com/hutamatr/GoBlogify/controllers/category"
 	controllersComment "github.com/hutamatr/GoBlogify/controllers/comment"
 	controllersPost "github.com/hutamatr/GoBlogify/controllers/post"
 	controllersRole "github.com/hutamatr/GoBlogify/controllers/role"
 	controllersUser "github.com/hutamatr/GoBlogify/controllers/user"
 	"github.com/hutamatr/GoBlogify/helpers"
+	"github.com/hutamatr/GoBlogify/middleware"
 	repositoriesCategory "github.com/hutamatr/GoBlogify/repositories/category"
 	repositoriesComment "github.com/hutamatr/GoBlogify/repositories/comment"
 	repositoriesPost "github.com/hutamatr/GoBlogify/repositories/post"
 	repositoriesRole "github.com/hutamatr/GoBlogify/repositories/role"
 	repositoriesUser "github.com/hutamatr/GoBlogify/repositories/user"
 	"github.com/hutamatr/GoBlogify/routes"
+	servicesAdmin "github.com/hutamatr/GoBlogify/services/admin"
 	servicesCategory "github.com/hutamatr/GoBlogify/services/category"
 	servicesComment "github.com/hutamatr/GoBlogify/services/comment"
 	servicesPost "github.com/hutamatr/GoBlogify/services/post"
@@ -72,9 +75,9 @@ func SetupRouterTest(db *sql.DB) http.Handler {
 	roleService := servicesRole.NewRoleService(roleRepository, db, validator)
 	roleController := controllersRole.NewRoleController(roleService)
 
-	PostRepository := repositoriesPost.NewPostRepository()
-	PostService := servicesPost.NewPostService(PostRepository, db, validator)
-	PostController := controllersPost.NewPostController(PostService)
+	postRepository := repositoriesPost.NewPostRepository()
+	postService := servicesPost.NewPostService(postRepository, db, validator)
+	postController := controllersPost.NewPostController(postService)
 
 	categoryRepository := repositoriesCategory.NewCategoryRepository()
 	categoryService := servicesCategory.NewCategoryService(categoryRepository, db, validator)
@@ -86,15 +89,20 @@ func SetupRouterTest(db *sql.DB) http.Handler {
 
 	userRepository := repositoriesUser.NewUserRepository()
 	userService := servicesUser.NewUserService(userRepository, roleRepository, db, validator)
-	UserController := controllersUser.NewUserController(userService)
+	userController := controllersUser.NewUserController(userService)
+
+	adminRepository := repositoriesUser.NewUserRepository()
+	adminService := servicesAdmin.NewAdminService(adminRepository, roleRepository, db, validator)
+	adminController := controllersAdmin.NewAdminControllerImpl(adminService)
 
 	router := routes.Router(&routes.RouterControllers{
-		PostController:     PostController,
+		PostController:     postController,
 		CategoryController: categoryController,
 		RoleController:     roleController,
-		UserController:     UserController,
+		UserController:     userController,
 		CommentController:  commentController,
+		AdminController:    adminController,
 	})
 
-	return router
+	return middleware.NewAuthMiddleware(router)
 }
