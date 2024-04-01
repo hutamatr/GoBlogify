@@ -21,7 +21,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func createUserTestUser(db *sql.DB) web.UserResponse {
+func createUserTestUser(db *sql.DB) (web.UserResponse, string) {
 	ctx := context.Background()
 	tx, err := db.Begin()
 	validator := validator.New()
@@ -31,9 +31,9 @@ func createUserTestUser(db *sql.DB) web.UserResponse {
 	userRepository := repositoriesUser.NewUserRepository()
 	roleRepository := repositoriesRole.NewRoleRepository()
 	userService := servicesUser.NewUserService(userRepository, roleRepository, db, validator)
-	user, _, _ := userService.SignUp(ctx, web.UserCreateRequest{Username: "userTest", Email: "testing@example.com", Password: "Password123!"})
+	user, accessToken, _ := userService.SignUp(ctx, web.UserCreateRequest{Username: "userTest", Email: "testing@example.com", Password: "Password123!"})
 
-	return user
+	return user, accessToken
 }
 
 func TestCreateAccount(t *testing.T) {
@@ -111,7 +111,7 @@ func TestLogin(t *testing.T) {
 	router := SetupRouterTest(db)
 	defer db.Close()
 
-	user := createUserTestUser(db)
+	user, _ := createUserTestUser(db)
 
 	t.Run("success login", func(t *testing.T) {
 		accountBody := strings.NewReader(`{
@@ -181,10 +181,12 @@ func TestFindAllUser(t *testing.T) {
 	defer db.Close()
 
 	createUserTestUser(db)
+	_, accessToken := createAdminTestAdmin(db)
 
 	t.Run("success find all user", func(t *testing.T) {
 		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/user", nil)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -210,6 +212,7 @@ func TestFindAllUser(t *testing.T) {
 		DeleteDBTest(db)
 		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/user", nil)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -239,11 +242,12 @@ func TestFindByIdUser(t *testing.T) {
 	router := SetupRouterTest(db)
 	defer db.Close()
 
-	user := createUserTestUser(db)
+	user, accessToken := createUserTestUser(db)
 
 	t.Run("success find by id user", func(t *testing.T) {
 		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/user/"+strconv.Itoa(user.Id), nil)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -271,6 +275,7 @@ func TestFindByIdUser(t *testing.T) {
 		DeleteDBTest(db)
 		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/user/0", nil)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -299,7 +304,7 @@ func TestUpdateUser(t *testing.T) {
 	router := SetupRouterTest(db)
 	defer db.Close()
 
-	user := createUserTestUser(db)
+	user, accessToken := createUserTestUser(db)
 
 	t.Run("success update user", func(t *testing.T) {
 		accountBody := strings.NewReader(`{
@@ -311,6 +316,7 @@ func TestUpdateUser(t *testing.T) {
 
 		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/user/"+strconv.Itoa(user.Id), accountBody)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -344,6 +350,7 @@ func TestUpdateUser(t *testing.T) {
 
 		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/user/"+strconv.Itoa(user.Id), accountBody)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -372,11 +379,12 @@ func TestDeleteUser(t *testing.T) {
 	router := SetupRouterTest(db)
 	defer db.Close()
 
-	user := createUserTestUser(db)
+	user, accessToken := createUserTestUser(db)
 
 	t.Run("success delete user", func(t *testing.T) {
 		request := httptest.NewRequest(http.MethodDelete, "http://localhost:8080/api/user/"+strconv.Itoa(user.Id), nil)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -401,6 +409,7 @@ func TestDeleteUser(t *testing.T) {
 	t.Run("failed delete user", func(t *testing.T) {
 		request := httptest.NewRequest(http.MethodDelete, "http://localhost:8080/api/user/0", nil)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 

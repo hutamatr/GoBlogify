@@ -23,6 +23,8 @@ func TestCreateCategory(t *testing.T) {
 	router := SetupRouterTest(db)
 	defer db.Close()
 
+	_, accessToken := createAdminTestAdmin(db)
+
 	t.Run("success create category", func(t *testing.T) {
 		categoryBody := strings.NewReader(`{
 			"name": "category-1"
@@ -30,6 +32,7 @@ func TestCreateCategory(t *testing.T) {
 
 		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/category", categoryBody)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -58,6 +61,7 @@ func TestCreateCategory(t *testing.T) {
 		}`)
 		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/category", categoryBody)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -86,6 +90,8 @@ func TestFindAllCategory(t *testing.T) {
 	router := SetupRouterTest(db)
 	defer db.Close()
 
+	_, accessToken := createUserTestUser(db)
+
 	t.Run("success find all category", func(t *testing.T) {
 		ctx := context.Background()
 		tx, err := db.Begin()
@@ -99,6 +105,7 @@ func TestFindAllCategory(t *testing.T) {
 
 		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/category", nil)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -127,6 +134,7 @@ func TestFindAllCategory(t *testing.T) {
 
 		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/category", nil)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -156,6 +164,8 @@ func TestFindByIdCategory(t *testing.T) {
 	router := SetupRouterTest(db)
 	defer db.Close()
 
+	_, accessToken := createUserTestUser(db)
+
 	t.Run("success find by id category", func(t *testing.T) {
 		ctx := context.Background()
 		tx, err := db.Begin()
@@ -168,6 +178,7 @@ func TestFindByIdCategory(t *testing.T) {
 
 		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/category/"+strconv.Itoa(category.Id), nil)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -193,6 +204,7 @@ func TestFindByIdCategory(t *testing.T) {
 	t.Run("not found find by id category", func(t *testing.T) {
 		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/category/1", nil)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -222,6 +234,8 @@ func TestUpdateCategory(t *testing.T) {
 	router := SetupRouterTest(db)
 	defer db.Close()
 
+	_, accessToken := createAdminTestAdmin(db)
+
 	t.Run("success update category", func(t *testing.T) {
 		ctx := context.Background()
 		tx, err := db.Begin()
@@ -238,6 +252,7 @@ func TestUpdateCategory(t *testing.T) {
 
 		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/category/"+strconv.Itoa(category.Id), categoryBody)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -268,6 +283,7 @@ func TestUpdateCategory(t *testing.T) {
 
 		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/category/1", categoryBody)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -306,6 +322,7 @@ func TestUpdateCategory(t *testing.T) {
 
 		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/category/"+strconv.Itoa(category.Id), categoryBody)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -336,6 +353,8 @@ func TestDeleteCategory(t *testing.T) {
 	router := SetupRouterTest(db)
 	defer db.Close()
 
+	_, accessToken := createAdminTestAdmin(db)
+
 	t.Run("success delete category", func(t *testing.T) {
 		ctx := context.Background()
 		tx, err := db.Begin()
@@ -348,6 +367,7 @@ func TestDeleteCategory(t *testing.T) {
 
 		request := httptest.NewRequest(http.MethodDelete, "http://localhost:8080/api/category/"+strconv.Itoa(category.Id), nil)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -372,6 +392,7 @@ func TestDeleteCategory(t *testing.T) {
 	t.Run("not found delete category", func(t *testing.T) {
 		request := httptest.NewRequest(http.MethodDelete, "http://localhost:8080/api/category/1", nil)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 

@@ -23,6 +23,8 @@ func TestCreateRole(t *testing.T) {
 	router := SetupRouterTest(db)
 	defer db.Close()
 
+	_, accessToken := createAdminTestAdmin(db)
+
 	t.Run("success create role", func(t *testing.T) {
 		roleBody := strings.NewReader(`{
 			"name": "user"
@@ -30,6 +32,7 @@ func TestCreateRole(t *testing.T) {
 
 		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/role", roleBody)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -58,6 +61,7 @@ func TestCreateRole(t *testing.T) {
 		}`)
 		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/role", roleBody)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -86,6 +90,8 @@ func TestFindAllRole(t *testing.T) {
 	router := SetupRouterTest(db)
 	defer db.Close()
 
+	_, accessToken := createAdminTestAdmin(db)
+
 	t.Run("success find all role", func(t *testing.T) {
 		ctx := context.Background()
 		tx, err := db.Begin()
@@ -93,12 +99,12 @@ func TestFindAllRole(t *testing.T) {
 
 		roleRepository := repositoriesRole.NewRoleRepository()
 		role1 := roleRepository.Save(ctx, tx, domain.Role{Name: "user"})
-		role2 := roleRepository.Save(ctx, tx, domain.Role{Name: "admin"})
 
 		tx.Commit()
 
 		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/role", nil)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -118,8 +124,8 @@ func TestFindAllRole(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, responseBody.Code)
 		assert.Equal(t, "OK", responseBody.Status)
-		assert.Equal(t, role1.Name, responseBody.Data.([]interface{})[0].(map[string]interface{})["name"])
-		assert.Equal(t, role2.Name, responseBody.Data.([]interface{})[1].(map[string]interface{})["name"])
+		assert.Equal(t, "admin", responseBody.Data.([]interface{})[0].(map[string]interface{})["name"])
+		assert.Equal(t, role1.Name, responseBody.Data.([]interface{})[1].(map[string]interface{})["name"])
 	})
 
 	t.Run("empty find all role", func(t *testing.T) {
@@ -127,6 +133,7 @@ func TestFindAllRole(t *testing.T) {
 
 		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/role", nil)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -156,6 +163,8 @@ func TestFindByIdRole(t *testing.T) {
 	router := SetupRouterTest(db)
 	defer db.Close()
 
+	_, accessToken := createAdminTestAdmin(db)
+
 	t.Run("success find by id role", func(t *testing.T) {
 		ctx := context.Background()
 		tx, err := db.Begin()
@@ -168,6 +177,7 @@ func TestFindByIdRole(t *testing.T) {
 
 		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/role/"+strconv.Itoa(role.Id), nil)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -191,8 +201,9 @@ func TestFindByIdRole(t *testing.T) {
 	})
 
 	t.Run("not found find by id role", func(t *testing.T) {
-		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/role/1", nil)
+		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/role/10", nil)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -222,6 +233,8 @@ func TestUpdateRole(t *testing.T) {
 	router := SetupRouterTest(db)
 	defer db.Close()
 
+	_, accessToken := createAdminTestAdmin(db)
+
 	t.Run("success update role", func(t *testing.T) {
 		ctx := context.Background()
 		tx, err := db.Begin()
@@ -233,11 +246,12 @@ func TestUpdateRole(t *testing.T) {
 		tx.Commit()
 
 		roleBody := strings.NewReader(`{
-			"name": "admin"
+			"name": "user-2"
 		}`)
 
 		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/role/"+strconv.Itoa(role.Id), roleBody)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -257,7 +271,7 @@ func TestUpdateRole(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, responseBody.Code)
 		assert.Equal(t, "UPDATED", responseBody.Status)
-		assert.Equal(t, "admin", responseBody.Data.(map[string]interface{})["name"])
+		assert.Equal(t, "user-2", responseBody.Data.(map[string]interface{})["name"])
 	})
 
 	t.Run("not found update role", func(t *testing.T) {
@@ -266,8 +280,9 @@ func TestUpdateRole(t *testing.T) {
 			"name": "user"
 		}`)
 
-		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/role/1", roleBody)
+		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/role/10", roleBody)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -306,6 +321,7 @@ func TestUpdateRole(t *testing.T) {
 
 		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/role/"+strconv.Itoa(role.Id), RoleBody)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -336,6 +352,8 @@ func TestDeleteRole(t *testing.T) {
 	router := SetupRouterTest(db)
 	defer db.Close()
 
+	_, accessToken := createAdminTestAdmin(db)
+
 	t.Run("success delete role", func(t *testing.T) {
 		ctx := context.Background()
 		tx, err := db.Begin()
@@ -348,6 +366,7 @@ func TestDeleteRole(t *testing.T) {
 
 		request := httptest.NewRequest(http.MethodDelete, "http://localhost:8080/api/role/"+strconv.Itoa(role.Id), nil)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -370,8 +389,9 @@ func TestDeleteRole(t *testing.T) {
 	})
 
 	t.Run("not found delete Role", func(t *testing.T) {
-		request := httptest.NewRequest(http.MethodDelete, "http://localhost:8080/api/role/1", nil)
+		request := httptest.NewRequest(http.MethodDelete, "http://localhost:8080/api/role/10", nil)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 

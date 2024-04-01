@@ -39,7 +39,7 @@ func TestCreatePost(t *testing.T) {
 	defer db.Close()
 
 	category := createCategoryTestPost(db)
-	user := createUserTestUser(db)
+	user, accessToken := createUserTestUser(db)
 
 	t.Run("success create post", func(t *testing.T) {
 		postBody := strings.NewReader(`{
@@ -52,6 +52,7 @@ func TestCreatePost(t *testing.T) {
 
 		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/post", postBody)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -88,6 +89,7 @@ func TestCreatePost(t *testing.T) {
 
 		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/post", postBody)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -117,7 +119,7 @@ func TestFindAllPost(t *testing.T) {
 	defer db.Close()
 
 	category := createCategoryTestPost(db)
-	user := createUserTestUser(db)
+	user, accessToken := createUserTestUser(db)
 
 	t.Run("success find all post", func(t *testing.T) {
 		ctx := context.Background()
@@ -137,6 +139,7 @@ func TestFindAllPost(t *testing.T) {
 
 		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/post", nil)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -165,6 +168,7 @@ func TestFindAllPost(t *testing.T) {
 
 		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/post", nil)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -195,7 +199,7 @@ func TestFindByIdPost(t *testing.T) {
 	defer db.Close()
 
 	category := createCategoryTestPost(db)
-	user := createUserTestUser(db)
+	user, accessToken := createUserTestUser(db)
 
 	t.Run("success find by id post", func(t *testing.T) {
 		ctx := context.Background()
@@ -215,6 +219,7 @@ func TestFindByIdPost(t *testing.T) {
 
 		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/post/"+strconv.Itoa(post.Id), nil)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -240,6 +245,7 @@ func TestFindByIdPost(t *testing.T) {
 	t.Run("not found find by id post", func(t *testing.T) {
 		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/post/1", nil)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -270,7 +276,7 @@ func TestUpdatePost(t *testing.T) {
 	defer db.Close()
 
 	category := createCategoryTestPost(db)
-	user := createUserTestUser(db)
+	user, accessToken := createUserTestUser(db)
 
 	t.Run("success update post", func(t *testing.T) {
 		ctx := context.Background()
@@ -298,6 +304,7 @@ func TestUpdatePost(t *testing.T) {
 
 		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/post/"+strconv.Itoa(post.Id), postBody)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -334,6 +341,7 @@ func TestUpdatePost(t *testing.T) {
 
 		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/post/1", postBody)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -382,6 +390,7 @@ func TestUpdatePost(t *testing.T) {
 
 		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/post/"+strconv.Itoa(post.Id), postBody)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -412,7 +421,7 @@ func TestDeletePost(t *testing.T) {
 	defer db.Close()
 
 	category := createCategoryTestPost(db)
-	user := createUserTestUser(db)
+	user, accessToken := createUserTestUser(db)
 
 	t.Run("success delete post", func(t *testing.T) {
 		ctx := context.Background()
@@ -432,6 +441,7 @@ func TestDeletePost(t *testing.T) {
 
 		request := httptest.NewRequest(http.MethodDelete, "http://localhost:8080/api/post/"+strconv.Itoa(post.Id), nil)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -456,6 +466,7 @@ func TestDeletePost(t *testing.T) {
 	t.Run("not found delete post", func(t *testing.T) {
 		request := httptest.NewRequest(http.MethodDelete, "http://localhost:8080/api/post/100", nil)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
