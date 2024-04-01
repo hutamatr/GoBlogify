@@ -22,11 +22,6 @@ type UserServiceImpl struct {
 	Validator      *validator.Validate
 }
 
-var env = helpers.NewEnv()
-var appEnv = env.App.AppEnv
-var accessTokenSecret = env.SecretToken.AccessSecret
-var refreshTokenSecret = env.SecretToken.RefreshSecret
-
 func NewUserService(userRepository repositoriesUser.UserRepository, roleRepository repositoriesRole.RoleRepository, db *sql.DB, validator *validator.Validate) UserService {
 	return &UserServiceImpl{
 		userRepository: userRepository,
@@ -37,6 +32,11 @@ func NewUserService(userRepository repositoriesUser.UserRepository, roleReposito
 }
 
 func (service *UserServiceImpl) SignUp(ctx context.Context, request web.UserCreateRequest) (web.UserResponse, string, string) {
+	env := helpers.NewEnv()
+	appEnv := env.App.AppEnv
+	accessTokenSecret := env.SecretToken.AccessSecret
+	refreshTokenSecret := env.SecretToken.RefreshSecret
+
 	err := service.Validator.Struct(request)
 	helpers.PanicError(err)
 
@@ -52,7 +52,7 @@ func (service *UserServiceImpl) SignUp(ctx context.Context, request web.UserCrea
 
 	role := service.roleRepository.FindByName(ctx, tx, "user")
 
-	if role.Name != "user" {
+	if role.Name != "user" || role.Name == "" {
 		newRole := domain.Role{
 			Name: "user",
 		}
@@ -70,20 +70,25 @@ func (service *UserServiceImpl) SignUp(ctx context.Context, request web.UserCrea
 		Role_Id:  role.Id,
 	}
 
-	newUser = service.userRepository.Save(ctx, tx, newUser)
+	createdUser := service.userRepository.Save(ctx, tx, newUser)
 
 	accessTokenExpired := helpers.AccessTokenDuration(appEnv)
 
-	accessToken, err := helpers.GenerateToken(request.Username, accessTokenExpired, accessTokenSecret)
+	accessToken, err := helpers.GenerateToken(createdUser.Id, accessTokenExpired, accessTokenSecret)
 	helpers.PanicError(err)
 
-	refreshToken, err := helpers.GenerateToken(request.Username, 168*time.Hour, refreshTokenSecret)
+	refreshToken, err := helpers.GenerateToken(createdUser.Id, 168*time.Hour, refreshTokenSecret)
 	helpers.PanicError(err)
 
-	return web.ToUserResponse(newUser), accessToken, refreshToken
+	return web.ToUserResponse(createdUser), accessToken, refreshToken
 }
 
 func (service *UserServiceImpl) SignIn(ctx context.Context, request web.UserLoginRequest) (web.UserResponse, string, string) {
+	env := helpers.NewEnv()
+	appEnv := env.App.AppEnv
+	accessTokenSecret := env.SecretToken.AccessSecret
+	refreshTokenSecret := env.SecretToken.RefreshSecret
+
 	err := service.Validator.Struct(request)
 	helpers.PanicError(err)
 
@@ -102,10 +107,10 @@ func (service *UserServiceImpl) SignIn(ctx context.Context, request web.UserLogi
 
 	accessTokenExpired := helpers.AccessTokenDuration(appEnv)
 
-	accessToken, err := helpers.GenerateToken(user.Username, accessTokenExpired, accessTokenSecret)
+	accessToken, err := helpers.GenerateToken(user.Id, accessTokenExpired, accessTokenSecret)
 	helpers.PanicError(err)
 
-	refreshToken, err := helpers.GenerateToken(user.Username, 168*time.Hour, refreshTokenSecret)
+	refreshToken, err := helpers.GenerateToken(user.Id, 168*time.Hour, refreshTokenSecret)
 	helpers.PanicError(err)
 
 	return web.ToUserResponse(user), accessToken, refreshToken
@@ -121,7 +126,11 @@ func (service *UserServiceImpl) FindById(ctx context.Context, userId int) web.Us
 	return web.ToUserResponse(user)
 }
 
-func (service *UserServiceImpl) FindAll(ctx context.Context) []web.UserResponse {
+func (service *UserServiceImpl) FindAll(ctx context.Context, isAdmin bool) []web.UserResponse {
+	if !isAdmin {
+		panic(exception.NewBadRequestError("only admin can get all users"))
+	}
+
 	tx, err := service.DB.Begin()
 	helpers.PanicError(err)
 	defer helpers.TxRollbackCommit(tx)
