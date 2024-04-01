@@ -7,9 +7,9 @@ import (
 )
 
 type CategoryService interface {
-	Create(ctx context.Context, request web.CategoryCreateRequest) web.CategoryResponse
+	Create(ctx context.Context, request web.CategoryCreateRequest, isAdmin bool) web.CategoryResponse
 	FindAll(ctx context.Context) []web.CategoryResponse
 	FindById(ctx context.Context, categoryId int) web.CategoryResponse
-	Update(ctx context.Context, request web.CategoryUpdateRequest) web.CategoryResponse
-	Delete(ctx context.Context, categoryId int)
+	Update(ctx context.Context, request web.CategoryUpdateRequest, isAdmin bool) web.CategoryResponse
+	Delete(ctx context.Context, categoryId int, isAdmin bool)
 }

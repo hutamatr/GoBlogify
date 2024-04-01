@@ -7,9 +7,9 @@ import (
 )
 
 type RoleService interface {
-	Create(ctx context.Context, request web.RoleCreateRequest) web.RoleResponse
-	FindAll(ctx context.Context) []web.RoleResponse
-	FindById(ctx context.Context, roleId int) web.RoleResponse
-	Update(ctx context.Context, request web.RoleUpdateRequest) web.RoleResponse
-	Delete(ctx context.Context, roleId int)
+	Create(ctx context.Context, request web.RoleCreateRequest, isAdmin bool) web.RoleResponse
+	FindAll(ctx context.Context, isAdmin bool) []web.RoleResponse
+	FindById(ctx context.Context, roleId int, isAdmin bool) web.RoleResponse
+	Update(ctx context.Context, request web.RoleUpdateRequest, isAdmin bool) web.RoleResponse
+	Delete(ctx context.Context, roleId int, isAdmin bool)
 }

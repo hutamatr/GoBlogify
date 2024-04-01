@@ -24,7 +24,9 @@ func (controller *RoleControllerImpl) CreateRole(writer http.ResponseWriter, req
 	var roleRequest web.RoleCreateRequest
 	helpers.DecodeJSONFromRequest(request, &roleRequest)
 
-	role := controller.service.Create(request.Context(), roleRequest)
+	isAdmin := helpers.IsAdmin(request)
+
+	role := controller.service.Create(request.Context(), roleRequest, isAdmin)
 
 	roleResponse := web.ResponseJSON{
 		Code:   http.StatusCreated,
@@ -37,7 +39,9 @@ func (controller *RoleControllerImpl) CreateRole(writer http.ResponseWriter, req
 }
 
 func (controller *RoleControllerImpl) FindAllRole(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-	roles := controller.service.FindAll(request.Context())
+	isAdmin := helpers.IsAdmin(request)
+
+	roles := controller.service.FindAll(request.Context(), isAdmin)
 
 	roleResponse := web.ResponseJSON{
 		Code:   http.StatusOK,
@@ -49,12 +53,14 @@ func (controller *RoleControllerImpl) FindAllRole(writer http.ResponseWriter, re
 }
 
 func (controller *RoleControllerImpl) FindRoleById(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	isAdmin := helpers.IsAdmin(request)
+
 	id := params.ByName("roleId")
 	roleId, err := strconv.Atoi(id)
 
 	helpers.PanicError(err)
 
-	role := controller.service.FindById(request.Context(), roleId)
+	role := controller.service.FindById(request.Context(), roleId, isAdmin)
 
 	roleResponse := web.ResponseJSON{
 		Code:   http.StatusOK,
@@ -69,13 +75,15 @@ func (controller *RoleControllerImpl) UpdateRole(writer http.ResponseWriter, req
 	var roleUpdateRequest web.RoleUpdateRequest
 	helpers.DecodeJSONFromRequest(request, &roleUpdateRequest)
 
+	isAdmin := helpers.IsAdmin(request)
+
 	id := params.ByName("roleId")
 	roleId, err := strconv.Atoi(id)
 	helpers.PanicError(err)
 
 	roleUpdateRequest.Id = roleId
 
-	updatedRole := controller.service.Update(request.Context(), roleUpdateRequest)
+	updatedRole := controller.service.Update(request.Context(), roleUpdateRequest, isAdmin)
 
 	roleResponse := web.ResponseJSON{
 		Code:   http.StatusOK,
@@ -87,11 +95,13 @@ func (controller *RoleControllerImpl) UpdateRole(writer http.ResponseWriter, req
 }
 
 func (controller *RoleControllerImpl) DeleteRole(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	isAdmin := helpers.IsAdmin(request)
+
 	id := params.ByName("roleId")
 	roleId, err := strconv.Atoi(id)
 	helpers.PanicError(err)
 
-	controller.service.Delete(request.Context(), roleId)
+	controller.service.Delete(request.Context(), roleId, isAdmin)
 
 	roleResponse := web.ResponseJSON{
 		Code:   http.StatusOK,

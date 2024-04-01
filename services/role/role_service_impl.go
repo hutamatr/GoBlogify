@@ -5,6 +5,7 @@ import (
 	"database/sql"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/hutamatr/GoBlogify/exception"
 	"github.com/hutamatr/GoBlogify/helpers"
 	"github.com/hutamatr/GoBlogify/model/domain"
 	"github.com/hutamatr/GoBlogify/model/web"
@@ -25,7 +26,11 @@ func NewRoleService(roleRepository repositoriesRole.RoleRepository, db *sql.DB, 
 	}
 }
 
-func (service *RoleServiceImpl) Create(ctx context.Context, request web.RoleCreateRequest) web.RoleResponse {
+func (service *RoleServiceImpl) Create(ctx context.Context, request web.RoleCreateRequest, isAdmin bool) web.RoleResponse {
+	if !isAdmin {
+		panic(exception.NewBadRequestError("only admin can create role"))
+	}
+
 	err := service.validator.Struct(request)
 	helpers.PanicError(err)
 
@@ -42,7 +47,11 @@ func (service *RoleServiceImpl) Create(ctx context.Context, request web.RoleCrea
 	return web.ToRoleResponse(createdRole)
 }
 
-func (service *RoleServiceImpl) FindAll(ctx context.Context) []web.RoleResponse {
+func (service *RoleServiceImpl) FindAll(ctx context.Context, isAdmin bool) []web.RoleResponse {
+	if !isAdmin {
+		panic(exception.NewBadRequestError("only admin can get all roles"))
+	}
+
 	tx, err := service.db.Begin()
 	helpers.PanicError(err)
 	defer helpers.TxRollbackCommit(tx)
@@ -58,7 +67,10 @@ func (service *RoleServiceImpl) FindAll(ctx context.Context) []web.RoleResponse 
 	return rolesData
 }
 
-func (service *RoleServiceImpl) FindById(ctx context.Context, roleId int) web.RoleResponse {
+func (service *RoleServiceImpl) FindById(ctx context.Context, roleId int, isAdmin bool) web.RoleResponse {
+	if !isAdmin {
+		panic(exception.NewBadRequestError("only admin can get role by id"))
+	}
 	tx, err := service.db.Begin()
 	helpers.PanicError(err)
 	defer helpers.TxRollbackCommit(tx)
@@ -68,7 +80,11 @@ func (service *RoleServiceImpl) FindById(ctx context.Context, roleId int) web.Ro
 	return web.ToRoleResponse(role)
 }
 
-func (service *RoleServiceImpl) Update(ctx context.Context, request web.RoleUpdateRequest) web.RoleResponse {
+func (service *RoleServiceImpl) Update(ctx context.Context, request web.RoleUpdateRequest, isAdmin bool) web.RoleResponse {
+	if !isAdmin {
+		panic(exception.NewBadRequestError("only admin can update role"))
+	}
+
 	err := service.validator.Struct(request)
 	helpers.PanicError(err)
 
@@ -85,7 +101,10 @@ func (service *RoleServiceImpl) Update(ctx context.Context, request web.RoleUpda
 	return web.ToRoleResponse(updatedRole)
 }
 
-func (service *RoleServiceImpl) Delete(ctx context.Context, roleId int) {
+func (service *RoleServiceImpl) Delete(ctx context.Context, roleId int, isAdmin bool) {
+	if !isAdmin {
+		panic(exception.NewBadRequestError("only admin can delete role"))
+	}
 	tx, err := service.db.Begin()
 	helpers.PanicError(err)
 	defer helpers.TxRollbackCommit(tx)

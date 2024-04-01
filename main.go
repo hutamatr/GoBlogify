@@ -3,10 +3,10 @@ package main
 import (
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/hutamatr/GoBlogify/app"
+	controllersAdmin "github.com/hutamatr/GoBlogify/controllers/admin"
 	controllersCategory "github.com/hutamatr/GoBlogify/controllers/category"
 	controllersComment "github.com/hutamatr/GoBlogify/controllers/comment"
 	controllersPost "github.com/hutamatr/GoBlogify/controllers/post"
@@ -20,28 +20,13 @@ import (
 	repositoriesRole "github.com/hutamatr/GoBlogify/repositories/role"
 	repositoriesUser "github.com/hutamatr/GoBlogify/repositories/user"
 	"github.com/hutamatr/GoBlogify/routes"
+	servicesAdmin "github.com/hutamatr/GoBlogify/services/admin"
 	servicesCategory "github.com/hutamatr/GoBlogify/services/category"
 	servicesComment "github.com/hutamatr/GoBlogify/services/comment"
 	servicesPost "github.com/hutamatr/GoBlogify/services/post"
 	servicesRole "github.com/hutamatr/GoBlogify/services/role"
 	servicesUser "github.com/hutamatr/GoBlogify/services/user"
-
-	"github.com/joho/godotenv"
 )
-
-func init() {
-	env := os.Getenv("APP_ENV")
-	if env == "" {
-		env = "development"
-	}
-
-	godotenv.Load(".env." + env)
-	if env != "test" {
-		godotenv.Load(".env")
-	}
-	godotenv.Load(".env." + env)
-	godotenv.Load()
-}
 
 func main() {
 	db := app.ConnectDB()
@@ -50,6 +35,10 @@ func main() {
 	roleRepository := repositoriesRole.NewRoleRepository()
 	roleService := servicesRole.NewRoleService(roleRepository, db, validator)
 	roleController := controllersRole.NewRoleController(roleService)
+
+	adminRepository := repositoriesUser.NewUserRepository()
+	adminService := servicesAdmin.NewAdminService(adminRepository, roleRepository, db, validator)
+	adminController := controllersAdmin.NewAdminControllerImpl(adminService)
 
 	userRepository := repositoriesUser.NewUserRepository()
 	userService := servicesUser.NewUserService(userRepository, roleRepository, db, validator)
@@ -73,6 +62,7 @@ func main() {
 		CategoryController: categoryController,
 		RoleController:     roleController,
 		CommentController:  commentController,
+		AdminController:    adminController,
 	})
 
 	cors := helpers.Cors()

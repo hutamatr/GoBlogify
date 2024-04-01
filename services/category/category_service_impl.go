@@ -5,6 +5,7 @@ import (
 	"database/sql"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/hutamatr/GoBlogify/exception"
 	"github.com/hutamatr/GoBlogify/helpers"
 	"github.com/hutamatr/GoBlogify/model/domain"
 	"github.com/hutamatr/GoBlogify/model/web"
@@ -25,7 +26,11 @@ func NewCategoryService(categoryRepository repositoriesCategory.CategoryReposito
 	}
 }
 
-func (service *CategoryServiceImpl) Create(ctx context.Context, request web.CategoryCreateRequest) web.CategoryResponse {
+func (service *CategoryServiceImpl) Create(ctx context.Context, request web.CategoryCreateRequest, isAdmin bool) web.CategoryResponse {
+	if !isAdmin {
+		panic(exception.NewBadRequestError("only admin can create category"))
+	}
+
 	err := service.validator.Struct(request)
 	helpers.PanicError(err)
 
@@ -72,7 +77,11 @@ func (service *CategoryServiceImpl) FindById(ctx context.Context, categoryId int
 	return web.ToCategoryResponse(category)
 }
 
-func (service *CategoryServiceImpl) Update(ctx context.Context, request web.CategoryUpdateRequest) web.CategoryResponse {
+func (service *CategoryServiceImpl) Update(ctx context.Context, request web.CategoryUpdateRequest, isAdmin bool) web.CategoryResponse {
+	if !isAdmin {
+		panic(exception.NewBadRequestError("only admin can update category"))
+	}
+
 	err := service.validator.Struct(request)
 	helpers.PanicError(err)
 
@@ -89,7 +98,11 @@ func (service *CategoryServiceImpl) Update(ctx context.Context, request web.Cate
 	return web.ToCategoryResponse(updatedCategory)
 }
 
-func (service *CategoryServiceImpl) Delete(ctx context.Context, categoryId int) {
+func (service *CategoryServiceImpl) Delete(ctx context.Context, categoryId int, isAdmin bool) {
+	if !isAdmin {
+		panic(exception.NewBadRequestError("only admin can delete category"))
+	}
+
 	tx, err := service.db.Begin()
 	helpers.PanicError(err)
 	defer helpers.TxRollbackCommit(tx)

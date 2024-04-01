@@ -24,7 +24,9 @@ func (controller *CategoryControllerImpl) CreateCategory(writer http.ResponseWri
 	var CategoryRequest web.CategoryCreateRequest
 	helpers.DecodeJSONFromRequest(request, &CategoryRequest)
 
-	category := controller.service.Create(request.Context(), CategoryRequest)
+	isAdmin := helpers.IsAdmin(request)
+
+	category := controller.service.Create(request.Context(), CategoryRequest, isAdmin)
 
 	CategoryResponse := web.ResponseJSON{
 		Code:   http.StatusCreated,
@@ -69,13 +71,15 @@ func (controller *CategoryControllerImpl) UpdateCategory(writer http.ResponseWri
 	var CategoryUpdateRequest web.CategoryUpdateRequest
 	helpers.DecodeJSONFromRequest(request, &CategoryUpdateRequest)
 
+	isAdmin := helpers.IsAdmin(request)
+
 	id := params.ByName("categoryId")
 	categoryId, err := strconv.Atoi(id)
 	helpers.PanicError(err)
 
 	CategoryUpdateRequest.Id = categoryId
 
-	updatedCategory := controller.service.Update(request.Context(), CategoryUpdateRequest)
+	updatedCategory := controller.service.Update(request.Context(), CategoryUpdateRequest, isAdmin)
 
 	CategoryResponse := web.ResponseJSON{
 		Code:   http.StatusOK,
@@ -87,12 +91,14 @@ func (controller *CategoryControllerImpl) UpdateCategory(writer http.ResponseWri
 }
 
 func (controller *CategoryControllerImpl) DeleteCategory(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	isAdmin := helpers.IsAdmin(request)
+
 	id := params.ByName("categoryId")
 	categoryId, err := strconv.Atoi(id)
 
 	helpers.PanicError(err)
 
-	controller.service.Delete(request.Context(), categoryId)
+	controller.service.Delete(request.Context(), categoryId, isAdmin)
 
 	CategoryResponse := web.ResponseJSON{
 		Code:   http.StatusOK,

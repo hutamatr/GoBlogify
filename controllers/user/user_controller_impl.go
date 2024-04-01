@@ -106,7 +106,9 @@ func (controller *UserControllerImpl) SignOutUser(writer http.ResponseWriter, re
 }
 
 func (controller *UserControllerImpl) FindAllUser(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
-	users := controller.service.FindAll(request.Context())
+	isAdmin := helpers.IsAdmin(request)
+
+	users := controller.service.FindAll(request.Context(), isAdmin)
 
 	userResponse := web.ResponseJSON{
 		Code:   http.StatusOK,
@@ -182,11 +184,12 @@ func (controller *UserControllerImpl) GetRefreshToken(writer http.ResponseWriter
 		panic(exception.NewUnauthorizedError(err.Error()))
 	}
 
-	username := claims["sub"].(string)
+	idFloat := claims["sub"].(float64)
+	userId := int(idFloat)
 
 	accessTokenExpired := helpers.AccessTokenDuration(AppEnv)
 
-	newAccessToken, err := helpers.GenerateToken(username, accessTokenExpired, accessTokenSecret)
+	newAccessToken, err := helpers.GenerateToken(userId, accessTokenExpired, accessTokenSecret)
 
 	helpers.PanicError(err)
 

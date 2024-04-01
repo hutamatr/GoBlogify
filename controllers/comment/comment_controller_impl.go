@@ -42,6 +42,13 @@ func (controller *CommentControllerImpl) FindCommentsByPost(writer http.Response
 	postId, err := strconv.Atoi(id)
 	helpers.PanicError(err)
 
+	limit := request.URL.Query().Get("limit")
+	if limit == "" {
+		limit = "10"
+	}
+	limitVal, err := strconv.Atoi(limit)
+	helpers.PanicError(err)
+
 	offset := request.URL.Query().Get("offset")
 	if offset == "" {
 		offset = "0"
@@ -49,12 +56,17 @@ func (controller *CommentControllerImpl) FindCommentsByPost(writer http.Response
 	offsetVal, err := strconv.Atoi(offset)
 	helpers.PanicError(err)
 
-	comments := controller.service.FindCommentsByPost(request.Context(), postId, offsetVal)
+	comments, countComments := controller.service.FindCommentsByPost(request.Context(), postId, limitVal, offsetVal)
 
 	CommentResponse := web.ResponseJSON{
 		Code:   http.StatusOK,
 		Status: "OK",
-		Data:   comments,
+		Data: map[string]interface{}{
+			"comments": comments,
+			"limit":    limitVal,
+			"offset":   offsetVal,
+			"total":    countComments,
+		},
 	}
 
 	helpers.EncodeJSONFromResponse(writer, CommentResponse)

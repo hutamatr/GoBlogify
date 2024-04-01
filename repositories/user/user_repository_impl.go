@@ -31,7 +31,7 @@ func (repository *UserRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, user
 
 	helpers.PanicError(err)
 
-	newUser := repository.FindOne(ctx, tx, int(id), user.Email)
+	newUser := repository.FindOne(ctx, tx, int(id), "")
 
 	return newUser
 }

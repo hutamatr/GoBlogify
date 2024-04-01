@@ -35,13 +35,13 @@ func (repository *CommentRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, c
 	return createdComment
 }
 
-func (repository *CommentRepositoryImpl) FindCommentsByPost(ctx context.Context, tx *sql.Tx, postId int, offset int) []domain.CommentJoin {
+func (repository *CommentRepositoryImpl) FindCommentsByPost(ctx context.Context, tx *sql.Tx, postId, limit, offset int) []domain.CommentJoin {
 	ctxC, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	query := "SELECT comment.id, comment.content, comment.post_id, comment.user_id, comment.created_at, comment.updated_at, user.id, user.username, user.email FROM comment INNER JOIN user ON user.id = comment.user_id WHERE post_id = ? LIMIT 10 OFFSET ?"
+	query := "SELECT comment.id, comment.content, comment.post_id, comment.user_id, comment.created_at, comment.updated_at, user.id, user.username, user.email FROM comment INNER JOIN user ON user.id = comment.user_id WHERE post_id = ? LIMIT ? OFFSET ?"
 
-	rows, err := tx.QueryContext(ctxC, query, postId, offset)
+	rows, err := tx.QueryContext(ctxC, query, postId, limit, offset)
 
 	helpers.PanicError(err)
 
@@ -117,4 +117,26 @@ func (repository *CommentRepositoryImpl) Delete(ctx context.Context, tx *sql.Tx,
 	}
 
 	helpers.PanicError(err)
+}
+
+func (repository *CommentRepositoryImpl) CountCommentsByPost(ctx context.Context, tx *sql.Tx, postId int) int {
+	ctxC, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	query := "SELECT COUNT(*) FROM comment WHERE post_id = ?"
+
+	rows, err := tx.QueryContext(ctxC, query, postId)
+
+	helpers.PanicError(err)
+
+	defer rows.Close()
+
+	var countComments int
+
+	if rows.Next() {
+		err := rows.Scan(&countComments)
+		helpers.PanicError(err)
+	}
+
+	return countComments
 }
