@@ -17,12 +17,12 @@ func AccessTokenDuration(appEnv string) time.Duration {
 	return accessTokenExpired
 }
 
-func GenerateToken(username string, expired time.Duration, tokenSecret string) (string, error) {
+func GenerateToken(userId int, expired time.Duration, tokenSecret string) (string, error) {
 	tokenBuilder := jwt.NewWithClaims(jwt.SigningMethodHS256,
 		jwt.MapClaims{
 			"exp": time.Now().Add(expired).Unix(),
 			"iat": time.Now().Unix(),
-			"sub": username,
+			"sub": userId,
 		})
 
 	tokenString, err := tokenBuilder.SignedString([]byte(tokenSecret))

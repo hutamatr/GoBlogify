@@ -1,6 +1,10 @@
 package helpers
 
-import "os"
+import (
+	"os"
+
+	"github.com/joho/godotenv"
+)
 
 type App struct {
 	AppEnv string
@@ -21,10 +25,29 @@ type SecretToken struct {
 	RefreshSecret string
 }
 
+type Auth struct {
+	AdminCode string
+}
+
 type Env struct {
 	App         *App
 	DB          *DB
 	SecretToken *SecretToken
+	Auth        *Auth
+}
+
+func init() {
+	env := os.Getenv("APP_ENV")
+	if env == "" {
+		env = "development"
+	}
+
+	godotenv.Load(".env." + env)
+	if env != "test" {
+		godotenv.Load(".env")
+	}
+	godotenv.Load(".env." + env)
+	godotenv.Load()
 }
 
 func NewEnv() *Env {
@@ -44,6 +67,9 @@ func NewEnv() *Env {
 		SecretToken: &SecretToken{
 			AccessSecret:  os.Getenv("ACCESS_TOKEN_SECRET"),
 			RefreshSecret: os.Getenv("REFRESH_TOKEN_SECRET"),
+		},
+		Auth: &Auth{
+			AdminCode: os.Getenv("ADMIN_CODE"),
 		},
 	}
 }
