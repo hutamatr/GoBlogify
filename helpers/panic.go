@@ -1,16 +1,12 @@
 package helpers
 
 import (
-	"log"
-
-	"github.com/fatih/color"
+	"github.com/rs/zerolog/log"
 )
 
-func PanicError(err error) {
-	errorColor := color.New(color.FgBlack).Add(color.BgRed).SprintfFunc()
-	outputColor := color.New(color.FgRed).Add(color.BgBlack).SprintfFunc()
+func PanicError(err error, msg string) {
 	if err != nil {
-		log.Printf("%s%v", errorColor("[ERROR] An error occurred-> "), outputColor(err.Error()))
+		log.Error().Err(err).Msg(msg)
 		panic(err)
 	}
 }

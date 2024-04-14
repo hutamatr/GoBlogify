@@ -5,7 +5,6 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/hutamatr/GoBlogify/helpers"
-	"github.com/hutamatr/GoBlogify/model/web"
 )
 
 func ErrorHandler(writer http.ResponseWriter, request *http.Request, err interface{}) {
@@ -27,9 +26,9 @@ func badRequestError(writer http.ResponseWriter, _ *http.Request, err interface{
 		writer.Header().Add("Content-Type", "application/json")
 		writer.WriteHeader(http.StatusBadRequest)
 
-		webResponseError := web.ResponseJSON{
+		webResponseError := helpers.ResponseJSON{
 			Code:   http.StatusBadRequest,
-			Status: "Bad Request",
+			Status: "BAD REQUEST",
 			Data:   exception.Error,
 		}
 
@@ -45,9 +44,9 @@ func validationError(writer http.ResponseWriter, _ *http.Request, err interface{
 		writer.Header().Add("Content-Type", "application/json")
 		writer.WriteHeader(http.StatusBadRequest)
 
-		ErrResponse := web.ResponseJSON{
+		ErrResponse := helpers.ResponseJSON{
 			Code:   http.StatusBadRequest,
-			Status: "Bad Request",
+			Status: "BAD REQUEST",
 			Data:   validationError.Error(),
 		}
 
@@ -59,14 +58,13 @@ func validationError(writer http.ResponseWriter, _ *http.Request, err interface{
 }
 
 func notFoundError(writer http.ResponseWriter, _ *http.Request, err interface{}) bool {
-
 	if notFoundErr, ok := err.(NotFoundError); ok {
 		writer.Header().Add("Content-Type", "application/json")
 		writer.WriteHeader(http.StatusNotFound)
 
-		ErrResponse := web.ResponseJSON{
+		ErrResponse := helpers.ResponseJSON{
 			Code:   http.StatusNotFound,
-			Status: "Not Found",
+			Status: "NOT FOUND",
 			Data:   notFoundErr.Error,
 		}
 
@@ -81,9 +79,9 @@ func internalServerError(writer http.ResponseWriter, _ *http.Request, err interf
 	writer.Header().Add("Content-Type", "application/json")
 	writer.WriteHeader(http.StatusInternalServerError)
 
-	ErrResponse := web.ResponseJSON{
+	ErrResponse := helpers.ResponseJSON{
 		Code:   http.StatusInternalServerError,
-		Status: "Internal Server Error",
+		Status: "INTERNAL SERVER ERROR",
 		Data:   err,
 	}
 

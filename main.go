@@ -1,68 +1,65 @@
 package main
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/hutamatr/GoBlogify/admin"
 	"github.com/hutamatr/GoBlogify/app"
-	controllersAdmin "github.com/hutamatr/GoBlogify/controllers/admin"
-	controllersCategory "github.com/hutamatr/GoBlogify/controllers/category"
-	controllersComment "github.com/hutamatr/GoBlogify/controllers/comment"
-	controllersPost "github.com/hutamatr/GoBlogify/controllers/post"
-	controllersRole "github.com/hutamatr/GoBlogify/controllers/role"
-	controllersUser "github.com/hutamatr/GoBlogify/controllers/user"
+	"github.com/hutamatr/GoBlogify/category"
+	"github.com/hutamatr/GoBlogify/comment"
+	"github.com/hutamatr/GoBlogify/follow"
+	"github.com/hutamatr/GoBlogify/post"
+	"github.com/hutamatr/GoBlogify/role"
+	"github.com/hutamatr/GoBlogify/user"
+
 	"github.com/hutamatr/GoBlogify/helpers"
 	"github.com/hutamatr/GoBlogify/middleware"
-	repositoriesCategory "github.com/hutamatr/GoBlogify/repositories/category"
-	repositoriesComment "github.com/hutamatr/GoBlogify/repositories/comment"
-	repositoriesPost "github.com/hutamatr/GoBlogify/repositories/post"
-	repositoriesRole "github.com/hutamatr/GoBlogify/repositories/role"
-	repositoriesUser "github.com/hutamatr/GoBlogify/repositories/user"
+
 	"github.com/hutamatr/GoBlogify/routes"
-	servicesAdmin "github.com/hutamatr/GoBlogify/services/admin"
-	servicesCategory "github.com/hutamatr/GoBlogify/services/category"
-	servicesComment "github.com/hutamatr/GoBlogify/services/comment"
-	servicesPost "github.com/hutamatr/GoBlogify/services/post"
-	servicesRole "github.com/hutamatr/GoBlogify/services/role"
-	servicesUser "github.com/hutamatr/GoBlogify/services/user"
+
+	"github.com/rs/zerolog/log"
 )
 
 func main() {
 	db := app.ConnectDB()
 	validator := validator.New(validator.WithRequiredStructEnabled())
 
-	roleRepository := repositoriesRole.NewRoleRepository()
-	roleService := servicesRole.NewRoleService(roleRepository, db, validator)
-	roleController := controllersRole.NewRoleController(roleService)
+	roleRepository := role.NewRoleRepository()
+	roleService := role.NewRoleService(roleRepository, db, validator)
+	roleController := role.NewRoleController(roleService)
 
-	adminRepository := repositoriesUser.NewUserRepository()
-	adminService := servicesAdmin.NewAdminService(adminRepository, roleRepository, db, validator)
-	adminController := controllersAdmin.NewAdminControllerImpl(adminService)
+	userRepository := user.NewUserRepository()
+	userService := user.NewUserService(userRepository, roleRepository, db, validator)
+	userController := user.NewUserController(userService)
 
-	userRepository := repositoriesUser.NewUserRepository()
-	userService := servicesUser.NewUserService(userRepository, roleRepository, db, validator)
-	userController := controllersUser.NewUserController(userService)
+	adminService := admin.NewAdminService(userRepository, roleRepository, db, validator)
+	adminController := admin.NewAdminControllerImpl(adminService)
 
-	postRepository := repositoriesPost.NewPostRepository()
-	postService := servicesPost.NewPostService(postRepository, db, validator)
-	postController := controllersPost.NewPostController(postService)
+	postRepository := post.NewPostRepository()
+	postService := post.NewPostService(postRepository, db, validator)
+	postController := post.NewPostController(postService)
 
-	commentRepository := repositoriesComment.NewCommentRepository()
-	commentService := servicesComment.NewCommentService(commentRepository, db, validator)
-	commentController := controllersComment.NewCommentController(commentService)
+	commentRepository := comment.NewCommentRepository()
+	commentService := comment.NewCommentService(commentRepository, db, validator)
+	commentController := comment.NewCommentController(commentService)
 
-	categoryRepository := repositoriesCategory.NewCategoryRepository()
-	categoryService := servicesCategory.NewCategoryService(categoryRepository, db, validator)
-	categoryController := controllersCategory.NewCategoryController(categoryService)
+	categoryRepository := category.NewCategoryRepository()
+	categoryService := category.NewCategoryService(categoryRepository, db, validator)
+	categoryController := category.NewCategoryController(categoryService)
+
+	followRepository := follow.NewFollowRepository()
+	followService := follow.NewFollowService(followRepository, db)
+	followController := follow.NewFollowController(followService)
 
 	router := routes.Router(&routes.RouterControllers{
-		UserController:     userController,
-		PostController:     postController,
-		CategoryController: categoryController,
-		RoleController:     roleController,
-		CommentController:  commentController,
-		AdminController:    adminController,
+		Admin:    adminController,
+		User:     userController,
+		Post:     postController,
+		Category: categoryController,
+		Role:     roleController,
+		Comment:  commentController,
+		Follow:   followController,
 	})
 
 	cors := helpers.Cors()
@@ -75,5 +72,8 @@ func main() {
 
 	helpers.ServerRunningText()
 
-	log.Fatal(server.ListenAndServe())
+	if err := http.ListenAndServe(server.Addr, server.Handler); err != nil {
+		log.Fatal().Err(err).Msg("Server failed to start")
+		return
+	}
 }

@@ -3,69 +3,76 @@ package routes
 import (
 	"net/http"
 
-	controllersAdmin "github.com/hutamatr/GoBlogify/controllers/admin"
-	controllersCategory "github.com/hutamatr/GoBlogify/controllers/category"
-	controllersComment "github.com/hutamatr/GoBlogify/controllers/comment"
-	controllersPost "github.com/hutamatr/GoBlogify/controllers/post"
-	controllersRole "github.com/hutamatr/GoBlogify/controllers/role"
-	controllersUser "github.com/hutamatr/GoBlogify/controllers/user"
+	"github.com/hutamatr/GoBlogify/admin"
+	"github.com/hutamatr/GoBlogify/category"
+	"github.com/hutamatr/GoBlogify/comment"
 	"github.com/hutamatr/GoBlogify/exception"
+	"github.com/hutamatr/GoBlogify/follow"
 	"github.com/hutamatr/GoBlogify/helpers"
-	"github.com/hutamatr/GoBlogify/model/web"
+	"github.com/hutamatr/GoBlogify/post"
+	"github.com/hutamatr/GoBlogify/role"
+	"github.com/hutamatr/GoBlogify/user"
 	"github.com/julienschmidt/httprouter"
 )
 
 type RouterControllers struct {
-	AdminController    controllersAdmin.AdminController
-	UserController     controllersUser.UserController
-	PostController     controllersPost.PostController
-	CategoryController controllersCategory.CategoryController
-	RoleController     controllersRole.RoleController
-	CommentController  controllersComment.CommentController
+	Admin    admin.AdminController
+	User     user.UserController
+	Post     post.PostController
+	Category category.CategoryController
+	Role     role.RoleController
+	Comment  comment.CommentController
+	Follow   follow.FollowController
 }
 
-func Router(routerControllers *RouterControllers) *httprouter.Router {
+func Router(route *RouterControllers) *httprouter.Router {
 	router := httprouter.New()
 
-	router.POST("/api/signup-admin", routerControllers.AdminController.CreateAdmin)
-	router.POST("/api/signin-admin", routerControllers.AdminController.SignInAdmin)
+	router.POST("/api/signup-admin", route.Admin.CreateAdminHandler)
+	router.POST("/api/signin-admin", route.Admin.SignInAdminHandler)
 
-	router.POST("/api/signup", routerControllers.UserController.CreateUser)
-	router.POST("/api/signin", routerControllers.UserController.SignInUser)
-	router.POST("/api/signout", routerControllers.UserController.SignOutUser)
-	router.GET("/api/user", routerControllers.UserController.FindAllUser)
-	router.GET("/api/user/:userId", routerControllers.UserController.FindByIdUser)
-	router.PUT("/api/user/:userId", routerControllers.UserController.UpdateUser)
-	router.DELETE("/api/user/:userId", routerControllers.UserController.DeleteUser)
-	router.GET("/api/refresh", routerControllers.UserController.GetRefreshToken)
+	router.POST("/api/signup", route.User.CreateUserHandler)
+	router.POST("/api/signin", route.User.SignInUserHandler)
+	router.POST("/api/signout", route.User.SignOutUserHandler)
+	router.GET("/api/refresh", route.User.GetRefreshTokenHandler)
 
-	router.POST("/api/role", routerControllers.RoleController.CreateRole)
-	router.GET("/api/role", routerControllers.RoleController.FindAllRole)
-	router.GET("/api/role/:roleId", routerControllers.RoleController.FindRoleById)
-	router.PUT("/api/role/:roleId", routerControllers.RoleController.UpdateRole)
-	router.DELETE("/api/role/:roleId", routerControllers.RoleController.DeleteRole)
+	router.GET("/api/user", route.User.FindAllUserHandler)
+	router.GET("/api/user/:userId", route.User.FindByIdUserHandler)
+	router.PUT("/api/user/:userId", route.User.UpdateUserHandler)
+	router.DELETE("/api/user/:userId", route.User.DeleteUserHandler)
 
-	router.POST("/api/post", routerControllers.PostController.CreatePost)
-	router.GET("/api/post", routerControllers.PostController.FindAllPost)
-	router.GET("/api/post/:postId", routerControllers.PostController.FindByIdPost)
-	router.PUT("/api/post/:postId", routerControllers.PostController.UpdatePost)
-	router.DELETE("/api/post/:postId", routerControllers.PostController.DeletePost)
+	router.POST("/api/user/:userId/follow/:toUserId", route.Follow.FollowUserHandler)
+	router.DELETE("/api/user/:userId/unfollow/:toUserId", route.Follow.UnfollowUserHandler)
+	router.GET("/api/user/:userId/follower", route.Follow.FindAllFollowerByUserHandler)
+	router.GET("/api/user/:userId/following", route.Follow.FindAllFollowedByUserHandler)
 
-	router.POST("/api/comment", routerControllers.CommentController.CreateComment)
-	router.GET("/api/comment", routerControllers.CommentController.FindCommentsByPost)
-	router.GET("/api/comment/:commentId", routerControllers.CommentController.FindByIdComment)
-	router.PUT("/api/comment/:commentId", routerControllers.CommentController.UpdateComment)
-	router.DELETE("/api/comment/:commentId", routerControllers.CommentController.DeleteComment)
+	router.POST("/api/role", route.Role.CreateRoleHandler)
+	router.GET("/api/role", route.Role.FindAllRoleHandler)
+	router.GET("/api/role/:roleId", route.Role.FindRoleByIdHandler)
+	router.PUT("/api/role/:roleId", route.Role.UpdateRoleHandler)
+	router.DELETE("/api/role/:roleId", route.Role.DeleteRoleHandler)
 
-	router.POST("/api/category", routerControllers.CategoryController.CreateCategory)
-	router.GET("/api/category", routerControllers.CategoryController.FindAllCategory)
-	router.GET("/api/category/:categoryId", routerControllers.CategoryController.FindByIdCategory)
-	router.PUT("/api/category/:categoryId", routerControllers.CategoryController.UpdateCategory)
-	router.DELETE("/api/category/:categoryId", routerControllers.CategoryController.DeleteCategory)
+	router.POST("/api/post", route.Post.CreatePostHandler)
+	router.GET("/api/post", route.Post.FindAllPostHandler)
+	router.GET("/api/post/:postId", route.Post.FindByIdPostHandler)
+	router.PUT("/api/post/:postId", route.Post.UpdatePostHandler)
+	router.DELETE("/api/post/:postId", route.Post.DeletePostHandler)
+
+	router.POST("/api/comment", route.Comment.CreateCommentHandler)
+	router.GET("/api/comment", route.Comment.FindCommentsByPostHandler)
+	router.GET("/api/comment/:commentId", route.Comment.FindCommentByIdHandler)
+	router.PUT("/api/comment/:commentId", route.Comment.UpdateCommentHandler)
+	router.DELETE("/api/comment/:commentId", route.Comment.DeleteCommentHandler)
+
+	router.POST("/api/category", route.Category.CreateCategoryHandler)
+	router.GET("/api/category", route.Category.FindAllCategoryHandler)
+	router.GET("/api/category/:categoryId", route.Category.FindByIdCategoryHandler)
+	router.PUT("/api/category/:categoryId", route.Category.UpdateCategoryHandler)
+	router.DELETE("/api/category/:categoryId", route.Category.DeleteCategoryHandler)
 
 	router.NotFound = http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		writer.WriteHeader(http.StatusNotFound)
-		userResponse := web.ResponseJSON{
+		userResponse := helpers.ResponseJSON{
 			Code:   http.StatusNotFound,
 			Status: "NOT FOUND",
 		}

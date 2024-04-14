@@ -6,7 +6,7 @@ import (
 
 func Cors() *cors.Cors {
 	env := NewEnv()
-	var appEnv = env.App.AppEnv
+	appEnv := env.App.AppEnv
 
 	cors := cors.New(cors.Options{
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},

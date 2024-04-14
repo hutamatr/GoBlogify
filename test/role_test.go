@@ -11,9 +11,7 @@ import (
 	"testing"
 
 	"github.com/hutamatr/GoBlogify/helpers"
-	"github.com/hutamatr/GoBlogify/model/domain"
-	"github.com/hutamatr/GoBlogify/model/web"
-	repositoriesRole "github.com/hutamatr/GoBlogify/repositories/role"
+	"github.com/hutamatr/GoBlogify/role"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -44,11 +42,11 @@ func TestCreateRole(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusCreated, responseBody.Code)
 		assert.Equal(t, "CREATED", responseBody.Status)
@@ -73,14 +71,14 @@ func TestCreateRole(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusBadRequest, responseBody.Code)
-		assert.Equal(t, "Bad Request", responseBody.Status)
+		assert.Equal(t, "BAD REQUEST", responseBody.Status)
 	})
 }
 
@@ -95,10 +93,10 @@ func TestFindAllRole(t *testing.T) {
 	t.Run("success find all role", func(t *testing.T) {
 		ctx := context.Background()
 		tx, err := db.Begin()
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to begin transaction")
 
-		roleRepository := repositoriesRole.NewRoleRepository()
-		role1 := roleRepository.Save(ctx, tx, domain.Role{Name: "user"})
+		roleRepository := role.NewRoleRepository()
+		role1 := roleRepository.Save(ctx, tx, role.Role{Name: "user"})
 
 		tx.Commit()
 
@@ -116,11 +114,11 @@ func TestFindAllRole(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusOK, responseBody.Code)
 		assert.Equal(t, "OK", responseBody.Status)
@@ -145,11 +143,11 @@ func TestFindAllRole(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusOK, responseBody.Code)
 		assert.Equal(t, "OK", responseBody.Status)
@@ -168,10 +166,10 @@ func TestFindByIdRole(t *testing.T) {
 	t.Run("success find by id role", func(t *testing.T) {
 		ctx := context.Background()
 		tx, err := db.Begin()
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to begin transaction")
 
-		roleRepository := repositoriesRole.NewRoleRepository()
-		role := roleRepository.Save(ctx, tx, domain.Role{Name: "user"})
+		roleRepository := role.NewRoleRepository()
+		role := roleRepository.Save(ctx, tx, role.Role{Name: "user"})
 
 		tx.Commit()
 
@@ -189,11 +187,11 @@ func TestFindByIdRole(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusOK, responseBody.Code)
 		assert.Equal(t, "OK", responseBody.Status)
@@ -215,14 +213,14 @@ func TestFindByIdRole(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusNotFound, responseBody.Code)
-		assert.Equal(t, "Not Found", responseBody.Status)
+		assert.Equal(t, "NOT FOUND", responseBody.Status)
 		assert.Equal(t, "role not found", responseBody.Data)
 	})
 }
@@ -238,10 +236,10 @@ func TestUpdateRole(t *testing.T) {
 	t.Run("success update role", func(t *testing.T) {
 		ctx := context.Background()
 		tx, err := db.Begin()
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to begin transaction")
 
-		roleRepository := repositoriesRole.NewRoleRepository()
-		role := roleRepository.Save(ctx, tx, domain.Role{Name: "user"})
+		roleRepository := role.NewRoleRepository()
+		role := roleRepository.Save(ctx, tx, role.Role{Name: "user"})
 
 		tx.Commit()
 
@@ -263,11 +261,11 @@ func TestUpdateRole(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusOK, responseBody.Code)
 		assert.Equal(t, "UPDATED", responseBody.Status)
@@ -294,24 +292,24 @@ func TestUpdateRole(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusNotFound, responseBody.Code)
-		assert.Equal(t, "Not Found", responseBody.Status)
+		assert.Equal(t, "NOT FOUND", responseBody.Status)
 		assert.Equal(t, "role not found", responseBody.Data)
 	})
 
 	t.Run("bad request update role", func(t *testing.T) {
 		ctx := context.Background()
 		tx, err := db.Begin()
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to begin transaction")
 
-		roleRepository := repositoriesRole.NewRoleRepository()
-		role := roleRepository.Save(ctx, tx, domain.Role{Name: "user"})
+		roleRepository := role.NewRoleRepository()
+		role := roleRepository.Save(ctx, tx, role.Role{Name: "user"})
 
 		tx.Commit()
 
@@ -333,14 +331,14 @@ func TestUpdateRole(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusBadRequest, responseBody.Code)
-		assert.Equal(t, "Bad Request", responseBody.Status)
+		assert.Equal(t, "BAD REQUEST", responseBody.Status)
 		assert.Equal(t, "Key: 'RoleUpdateRequest.Name' Error:Field validation for 'Name' failed on the 'required' tag", responseBody.Data)
 	})
 
@@ -357,10 +355,10 @@ func TestDeleteRole(t *testing.T) {
 	t.Run("success delete role", func(t *testing.T) {
 		ctx := context.Background()
 		tx, err := db.Begin()
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to begin transaction")
 
-		roleRepository := repositoriesRole.NewRoleRepository()
-		role := roleRepository.Save(ctx, tx, domain.Role{Name: "Role-3"})
+		roleRepository := role.NewRoleRepository()
+		role := roleRepository.Save(ctx, tx, role.Role{Name: "Role-3"})
 
 		tx.Commit()
 
@@ -378,11 +376,11 @@ func TestDeleteRole(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusOK, responseBody.Code)
 		assert.Equal(t, "DELETED", responseBody.Status)
@@ -403,13 +401,13 @@ func TestDeleteRole(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusNotFound, responseBody.Code)
-		assert.Equal(t, "Not Found", responseBody.Status)
+		assert.Equal(t, "NOT FOUND", responseBody.Status)
 	})
 }

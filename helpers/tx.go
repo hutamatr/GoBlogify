@@ -8,10 +8,10 @@ func TxRollbackCommit(tx *sql.Tx) {
 	err := recover()
 	if err != nil {
 		errRollback := tx.Rollback()
-		PanicError(errRollback)
+		PanicError(errRollback, "failed to rollback transaction")
 		panic(err)
 	} else {
 		errCommit := tx.Commit()
-		PanicError(errCommit)
+		PanicError(errCommit, "failed to commit transaction")
 	}
 }
