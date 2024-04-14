@@ -11,28 +11,27 @@ import (
 	"testing"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/hutamatr/GoBlogify/admin"
 	"github.com/hutamatr/GoBlogify/helpers"
-	"github.com/hutamatr/GoBlogify/model/web"
-	repositoriesRole "github.com/hutamatr/GoBlogify/repositories/role"
-	repositoriesUser "github.com/hutamatr/GoBlogify/repositories/user"
-	servicesAdmin "github.com/hutamatr/GoBlogify/services/admin"
+	"github.com/hutamatr/GoBlogify/role"
+	"github.com/hutamatr/GoBlogify/user"
 	"github.com/stretchr/testify/assert"
 )
 
-func createAdminTestAdmin(db *sql.DB) (web.AdminResponse, string) {
+func createAdminTestAdmin(db *sql.DB) (admin.AdminResponse, string) {
 	env := helpers.NewEnv()
 	adminCode := env.Auth.AdminCode
 
 	ctx := context.Background()
 	tx, err := db.Begin()
 	validator := validator.New()
-	helpers.PanicError(err)
+	helpers.PanicError(err, "failed to begin transaction")
 	defer tx.Commit()
 
-	userRepository := repositoriesUser.NewUserRepository()
-	roleRepository := repositoriesRole.NewRoleRepository()
-	userService := servicesAdmin.NewAdminService(userRepository, roleRepository, db, validator)
-	admin, accessToken, _ := userService.SignUpAdmin(ctx, web.AdminCreateRequest{Username: "admin", Email: "admin@example.com", Password: "Admin123!", Admin_Code: adminCode})
+	userRepository := user.NewUserRepository()
+	roleRepository := role.NewRoleRepository()
+	userService := admin.NewAdminService(userRepository, roleRepository, db, validator)
+	admin, accessToken, _ := userService.SignUpAdmin(ctx, admin.AdminCreateRequest{Username: "admin", Email: "admin@example.com", Password: "Admin123!", Admin_Code: adminCode})
 
 	return admin, accessToken
 }
@@ -67,11 +66,11 @@ func TestCreateAdminAccount(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusCreated, responseBody.Code)
 		assert.Equal(t, "CREATED", responseBody.Status)
@@ -100,14 +99,14 @@ func TestCreateAdminAccount(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusBadRequest, responseBody.Code)
-		assert.Equal(t, "Bad Request", responseBody.Status)
+		assert.Equal(t, "BAD REQUEST", responseBody.Status)
 	})
 }
 
@@ -138,11 +137,11 @@ func TestLoginAdmin(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusOK, responseBody.Code)
 		assert.Equal(t, "OK", responseBody.Status)
@@ -169,13 +168,13 @@ func TestLoginAdmin(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusBadRequest, responseBody.Code)
-		assert.Equal(t, "Bad Request", responseBody.Status)
+		assert.Equal(t, "BAD REQUEST", responseBody.Status)
 	})
 }

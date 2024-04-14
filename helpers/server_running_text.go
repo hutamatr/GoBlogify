@@ -2,10 +2,9 @@ package helpers
 
 import (
 	"fmt"
-	"log"
 	"time"
 
-	"github.com/fatih/color"
+	"github.com/rs/zerolog/log"
 )
 
 func ServerRunningText() {
@@ -14,13 +13,12 @@ func ServerRunningText() {
 	host := env.App.Host
 	port := env.App.Port
 
-	textColor := color.New(color.FgGreen).Add(color.BgBlack).SprintfFunc()
-	serverRunningText := []string{"Connecting to database...", "Connected!", fmt.Sprintf("Server running on http://%s:%s", host, port), fmt.Sprintf("Environment: %s", appEnv)}
-	ticker := time.NewTicker(1 * time.Second)
+	serverRunningText := []string{"Running server...", fmt.Sprintf("Server running on http://%s:%s", host, port), fmt.Sprintf("Environment -> %s", appEnv)}
+	ticker := time.NewTicker(500 * time.Millisecond)
 	defer ticker.Stop()
 
 	for i := range serverRunningText {
 		<-ticker.C
-		log.Printf("%s %s\n", textColor("OK"), serverRunningText[i])
+		log.Info().Msg(serverRunningText[i])
 	}
 }

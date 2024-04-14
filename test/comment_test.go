@@ -11,23 +11,20 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/hutamatr/GoBlogify/comment"
 	"github.com/hutamatr/GoBlogify/helpers"
-	"github.com/hutamatr/GoBlogify/model/domain"
-	"github.com/hutamatr/GoBlogify/model/web"
-
-	repositoriesComment "github.com/hutamatr/GoBlogify/repositories/comment"
-	repositoriesPost "github.com/hutamatr/GoBlogify/repositories/post"
+	"github.com/hutamatr/GoBlogify/post"
 	"github.com/stretchr/testify/assert"
 )
 
-func createPostTestComment(db *sql.DB, userId int, categoryId int) domain.PostJoin {
+func createPostTestComment(db *sql.DB, userId int, categoryId int) post.PostJoin {
 	ctx := context.Background()
 	tx, err := db.Begin()
-	helpers.PanicError(err)
+	helpers.PanicError(err, "failed to begin transaction")
 	defer tx.Commit()
 
-	postRepository := repositoriesPost.NewPostRepository()
-	post := postRepository.Save(ctx, tx, domain.Post{
+	postRepository := post.NewPostRepository()
+	post := postRepository.Save(ctx, tx, post.Post{
 		Title:       "Post-1",
 		Body:        "Body-1",
 		Published:   true,
@@ -69,11 +66,11 @@ func TestCreateComment(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusCreated, responseBody.Code)
 		assert.Equal(t, "CREATED", responseBody.Status)
@@ -103,14 +100,14 @@ func TestCreateComment(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusBadRequest, responseBody.Code)
-		assert.Equal(t, "Bad Request", responseBody.Status)
+		assert.Equal(t, "BAD REQUEST", responseBody.Status)
 	})
 }
 
@@ -127,10 +124,10 @@ func TestFindCommentByPost(t *testing.T) {
 	t.Run("success find comment by post", func(t *testing.T) {
 		ctx := context.Background()
 		tx, err := db.Begin()
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to begin transaction")
 
-		commentRepository := repositoriesComment.NewCommentRepository()
-		comment := commentRepository.Save(ctx, tx, domain.Comment{
+		commentRepository := comment.NewCommentRepository()
+		comment := commentRepository.Save(ctx, tx, comment.Comment{
 			Content: "comment-1",
 			User_Id: user.Id,
 			Post_Id: post.Id,
@@ -152,11 +149,11 @@ func TestFindCommentByPost(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusOK, responseBody.Code)
 		assert.Equal(t, "OK", responseBody.Status)
@@ -181,11 +178,11 @@ func TestFindCommentByPost(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusOK, responseBody.Code)
 		assert.Equal(t, "OK", responseBody.Status)
@@ -206,10 +203,10 @@ func TestFindCommentById(t *testing.T) {
 	t.Run("success find comment by id", func(t *testing.T) {
 		ctx := context.Background()
 		tx, err := db.Begin()
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to begin transaction")
 
-		commentRepository := repositoriesComment.NewCommentRepository()
-		comment := commentRepository.Save(ctx, tx, domain.Comment{
+		commentRepository := comment.NewCommentRepository()
+		comment := commentRepository.Save(ctx, tx, comment.Comment{
 			Content: "comment-1",
 			User_Id: user.Id,
 			Post_Id: post.Id,
@@ -231,11 +228,11 @@ func TestFindCommentById(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusOK, responseBody.Code)
 		assert.Equal(t, "OK", responseBody.Status)
@@ -257,14 +254,14 @@ func TestFindCommentById(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusNotFound, responseBody.Code)
-		assert.Equal(t, "Not Found", responseBody.Status)
+		assert.Equal(t, "NOT FOUND", responseBody.Status)
 		assert.Equal(t, "comment not found", responseBody.Data)
 	})
 }
@@ -282,10 +279,10 @@ func TestUpdateComment(t *testing.T) {
 	t.Run("success update comment", func(t *testing.T) {
 		ctx := context.Background()
 		tx, err := db.Begin()
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to begin transaction")
 
-		commentRepository := repositoriesComment.NewCommentRepository()
-		comment := commentRepository.Save(ctx, tx, domain.Comment{
+		commentRepository := comment.NewCommentRepository()
+		comment := commentRepository.Save(ctx, tx, comment.Comment{
 			Content: "comment-1",
 			User_Id: user.Id,
 			Post_Id: post.Id,
@@ -313,11 +310,11 @@ func TestUpdateComment(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusOK, responseBody.Code)
 		assert.Equal(t, "UPDATED", responseBody.Status)
@@ -345,24 +342,24 @@ func TestUpdateComment(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusNotFound, responseBody.Code)
-		assert.Equal(t, "Not Found", responseBody.Status)
+		assert.Equal(t, "NOT FOUND", responseBody.Status)
 		assert.Equal(t, "comment not found", responseBody.Data)
 	})
 
 	t.Run("bad request update comment", func(t *testing.T) {
 		ctx := context.Background()
 		tx, err := db.Begin()
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to begin transaction")
 
-		commentRepository := repositoriesComment.NewCommentRepository()
-		comment := commentRepository.Save(ctx, tx, domain.Comment{
+		commentRepository := comment.NewCommentRepository()
+		comment := commentRepository.Save(ctx, tx, comment.Comment{
 			Content: "comment-1",
 			User_Id: user.Id,
 			Post_Id: post.Id,
@@ -390,14 +387,14 @@ func TestUpdateComment(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusBadRequest, responseBody.Code)
-		assert.Equal(t, "Bad Request", responseBody.Status)
+		assert.Equal(t, "BAD REQUEST", responseBody.Status)
 	})
 
 }
@@ -415,10 +412,10 @@ func TestDeleteComment(t *testing.T) {
 	t.Run("success delete comment", func(t *testing.T) {
 		ctx := context.Background()
 		tx, err := db.Begin()
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to begin transaction")
 
-		commentRepository := repositoriesComment.NewCommentRepository()
-		comment := commentRepository.Save(ctx, tx, domain.Comment{
+		commentRepository := comment.NewCommentRepository()
+		comment := commentRepository.Save(ctx, tx, comment.Comment{
 			Content: "comment-1",
 			User_Id: user.Id,
 			Post_Id: post.Id,
@@ -440,11 +437,11 @@ func TestDeleteComment(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusOK, responseBody.Code)
 		assert.Equal(t, "DELETED", responseBody.Status)
@@ -465,13 +462,13 @@ func TestDeleteComment(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusNotFound, responseBody.Code)
-		assert.Equal(t, "Not Found", responseBody.Status)
+		assert.Equal(t, "NOT FOUND", responseBody.Status)
 	})
 }

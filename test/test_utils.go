@@ -8,32 +8,24 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	_ "github.com/go-sql-driver/mysql"
-	controllersAdmin "github.com/hutamatr/GoBlogify/controllers/admin"
-	controllersCategory "github.com/hutamatr/GoBlogify/controllers/category"
-	controllersComment "github.com/hutamatr/GoBlogify/controllers/comment"
-	controllersPost "github.com/hutamatr/GoBlogify/controllers/post"
-	controllersRole "github.com/hutamatr/GoBlogify/controllers/role"
-	controllersUser "github.com/hutamatr/GoBlogify/controllers/user"
+	"github.com/hutamatr/GoBlogify/admin"
+	"github.com/hutamatr/GoBlogify/category"
+	"github.com/hutamatr/GoBlogify/comment"
+	"github.com/hutamatr/GoBlogify/follow"
+	"github.com/hutamatr/GoBlogify/post"
+	"github.com/hutamatr/GoBlogify/role"
+	"github.com/hutamatr/GoBlogify/routes"
+	"github.com/hutamatr/GoBlogify/user"
+
 	"github.com/hutamatr/GoBlogify/helpers"
 	"github.com/hutamatr/GoBlogify/middleware"
-	repositoriesCategory "github.com/hutamatr/GoBlogify/repositories/category"
-	repositoriesComment "github.com/hutamatr/GoBlogify/repositories/comment"
-	repositoriesPost "github.com/hutamatr/GoBlogify/repositories/post"
-	repositoriesRole "github.com/hutamatr/GoBlogify/repositories/role"
-	repositoriesUser "github.com/hutamatr/GoBlogify/repositories/user"
-	"github.com/hutamatr/GoBlogify/routes"
-	servicesAdmin "github.com/hutamatr/GoBlogify/services/admin"
-	servicesCategory "github.com/hutamatr/GoBlogify/services/category"
-	servicesComment "github.com/hutamatr/GoBlogify/services/comment"
-	servicesPost "github.com/hutamatr/GoBlogify/services/post"
-	servicesRole "github.com/hutamatr/GoBlogify/services/role"
-	servicesUser "github.com/hutamatr/GoBlogify/services/user"
+
 	"github.com/joho/godotenv"
 )
 
 func init() {
 	err := godotenv.Load("../.env.test")
-	helpers.PanicError(err)
+	helpers.PanicError(err, "failed to load .env.test")
 }
 
 func ConnectDBTest() *sql.DB {
@@ -45,7 +37,7 @@ func ConnectDBTest() *sql.DB {
 	Host := env.DB.Host
 
 	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", DBUsername, DBPassword, Host, DBPort, DBName))
-	helpers.PanicError(err)
+	helpers.PanicError(err, "failed to connect test database")
 
 	db.SetMaxIdleConns(10)
 	db.SetMaxOpenConns(100)
@@ -57,51 +49,57 @@ func ConnectDBTest() *sql.DB {
 
 func DeleteDBTest(db *sql.DB) {
 	_, err := db.Exec("DELETE FROM comment")
-	helpers.PanicError(err)
+	helpers.PanicError(err, "failed to delete comment")
 	_, err = db.Exec("DELETE FROM post")
-	helpers.PanicError(err)
+	helpers.PanicError(err, "failed to delete post")
 	_, err = db.Exec("DELETE FROM category")
-	helpers.PanicError(err)
+	helpers.PanicError(err, "failed to delete category")
 	_, err = db.Exec("DELETE FROM user")
-	helpers.PanicError(err)
+	helpers.PanicError(err, "failed to delete user")
 	_, err = db.Exec("DELETE FROM role")
-	helpers.PanicError(err)
+	helpers.PanicError(err, "failed to delete role")
+	_, err = db.Exec("DELETE FROM follow")
+	helpers.PanicError(err, "failed to delete follow")
 }
 
 func SetupRouterTest(db *sql.DB) http.Handler {
 	validator := validator.New()
 
-	roleRepository := repositoriesRole.NewRoleRepository()
-	roleService := servicesRole.NewRoleService(roleRepository, db, validator)
-	roleController := controllersRole.NewRoleController(roleService)
+	roleRepository := role.NewRoleRepository()
+	roleService := role.NewRoleService(roleRepository, db, validator)
+	roleController := role.NewRoleController(roleService)
 
-	postRepository := repositoriesPost.NewPostRepository()
-	postService := servicesPost.NewPostService(postRepository, db, validator)
-	postController := controllersPost.NewPostController(postService)
+	postRepository := post.NewPostRepository()
+	postService := post.NewPostService(postRepository, db, validator)
+	postController := post.NewPostController(postService)
 
-	categoryRepository := repositoriesCategory.NewCategoryRepository()
-	categoryService := servicesCategory.NewCategoryService(categoryRepository, db, validator)
-	categoryController := controllersCategory.NewCategoryController(categoryService)
+	categoryRepository := category.NewCategoryRepository()
+	categoryService := category.NewCategoryService(categoryRepository, db, validator)
+	categoryController := category.NewCategoryController(categoryService)
 
-	commentRepository := repositoriesComment.NewCommentRepository()
-	commentService := servicesComment.NewCommentService(commentRepository, db, validator)
-	commentController := controllersComment.NewCommentController(commentService)
+	commentRepository := comment.NewCommentRepository()
+	commentService := comment.NewCommentService(commentRepository, db, validator)
+	commentController := comment.NewCommentController(commentService)
 
-	userRepository := repositoriesUser.NewUserRepository()
-	userService := servicesUser.NewUserService(userRepository, roleRepository, db, validator)
-	userController := controllersUser.NewUserController(userService)
+	userRepository := user.NewUserRepository()
+	userService := user.NewUserService(userRepository, roleRepository, db, validator)
+	userController := user.NewUserController(userService)
 
-	adminRepository := repositoriesUser.NewUserRepository()
-	adminService := servicesAdmin.NewAdminService(adminRepository, roleRepository, db, validator)
-	adminController := controllersAdmin.NewAdminControllerImpl(adminService)
+	adminService := admin.NewAdminService(userRepository, roleRepository, db, validator)
+	adminController := admin.NewAdminControllerImpl(adminService)
+
+	followRepository := follow.NewFollowRepository()
+	followService := follow.NewFollowService(followRepository, db)
+	followController := follow.NewFollowController(followService)
 
 	router := routes.Router(&routes.RouterControllers{
-		PostController:     postController,
-		CategoryController: categoryController,
-		RoleController:     roleController,
-		UserController:     userController,
-		CommentController:  commentController,
-		AdminController:    adminController,
+		Admin:    adminController,
+		User:     userController,
+		Post:     postController,
+		Category: categoryController,
+		Role:     roleController,
+		Comment:  commentController,
+		Follow:   followController,
 	})
 
 	return middleware.NewAuthMiddleware(router)

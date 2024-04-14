@@ -11,23 +11,20 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/hutamatr/GoBlogify/category"
 	"github.com/hutamatr/GoBlogify/helpers"
-	"github.com/hutamatr/GoBlogify/model/domain"
-	"github.com/hutamatr/GoBlogify/model/web"
-
-	repositoriesCategory "github.com/hutamatr/GoBlogify/repositories/category"
-	repositoriesPost "github.com/hutamatr/GoBlogify/repositories/post"
+	"github.com/hutamatr/GoBlogify/post"
 	"github.com/stretchr/testify/assert"
 )
 
-func createCategoryTestPost(db *sql.DB) domain.Category {
+func createCategoryTestPost(db *sql.DB) category.Category {
 	ctx := context.Background()
 	tx, err := db.Begin()
-	helpers.PanicError(err)
+	helpers.PanicError(err, "failed to begin transaction")
 	defer tx.Commit()
 
-	categoryRepository := repositoriesCategory.NewCategoryRepository()
-	category := categoryRepository.Save(ctx, tx, domain.Category{Name: "category-3"})
+	categoryRepository := category.NewCategoryRepository()
+	category := categoryRepository.Save(ctx, tx, category.Category{Name: "category-3"})
 
 	return category
 }
@@ -64,17 +61,16 @@ func TestCreatePost(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusCreated, responseBody.Code)
 		assert.Equal(t, "CREATED", responseBody.Status)
 		assert.Equal(t, "post-1", responseBody.Data.(map[string]interface{})["title"])
 		assert.Equal(t, "body-1", responseBody.Data.(map[string]interface{})["body"])
-		// assert.Equal(t, "author-1", responseBody.Data.(map[string]interface{})["user"])
 		assert.Equal(t, true, responseBody.Data.(map[string]interface{})["published"])
 	})
 
@@ -101,14 +97,14 @@ func TestCreatePost(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusBadRequest, responseBody.Code)
-		assert.Equal(t, "Bad Request", responseBody.Status)
+		assert.Equal(t, "BAD REQUEST", responseBody.Status)
 	})
 }
 
@@ -124,10 +120,10 @@ func TestFindAllPost(t *testing.T) {
 	t.Run("success find all post", func(t *testing.T) {
 		ctx := context.Background()
 		tx, err := db.Begin()
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to begin transaction")
 
-		postRepository := repositoriesPost.NewPostRepository()
-		post := postRepository.Save(ctx, tx, domain.Post{
+		postRepository := post.NewPostRepository()
+		post := postRepository.Save(ctx, tx, post.Post{
 			Title:       "Post-3",
 			Body:        "Body-3",
 			User_Id:     user.Id,
@@ -151,16 +147,15 @@ func TestFindAllPost(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusOK, responseBody.Code)
 		assert.Equal(t, "OK", responseBody.Status)
-		assert.Equal(t, post.Title, responseBody.Data.([]interface{})[0].(map[string]interface{})["title"])
-
+		assert.Equal(t, post.Title, responseBody.Data.(map[string]interface{})["posts"].([]interface{})[0].(map[string]interface{})["title"])
 	})
 
 	t.Run("empty find all post", func(t *testing.T) {
@@ -180,15 +175,15 @@ func TestFindAllPost(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusOK, responseBody.Code)
 		assert.Equal(t, "OK", responseBody.Status)
-		assert.Nil(t, responseBody.Data)
+		assert.Nil(t, responseBody.Data.(map[string]interface{})["posts"])
 	})
 }
 
@@ -204,10 +199,10 @@ func TestFindByIdPost(t *testing.T) {
 	t.Run("success find by id post", func(t *testing.T) {
 		ctx := context.Background()
 		tx, err := db.Begin()
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to begin transaction")
 
-		postRepository := repositoriesPost.NewPostRepository()
-		post := postRepository.Save(ctx, tx, domain.Post{
+		postRepository := post.NewPostRepository()
+		post := postRepository.Save(ctx, tx, post.Post{
 			Title:       "Post-4",
 			Body:        "Body-4",
 			User_Id:     user.Id,
@@ -231,11 +226,11 @@ func TestFindByIdPost(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusOK, responseBody.Code)
 		assert.Equal(t, "OK", responseBody.Status)
@@ -257,14 +252,14 @@ func TestFindByIdPost(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusNotFound, responseBody.Code)
-		assert.Equal(t, "Not Found", responseBody.Status)
+		assert.Equal(t, "NOT FOUND", responseBody.Status)
 		assert.Equal(t, "post not found", responseBody.Data)
 	})
 }
@@ -281,10 +276,10 @@ func TestUpdatePost(t *testing.T) {
 	t.Run("success update post", func(t *testing.T) {
 		ctx := context.Background()
 		tx, err := db.Begin()
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to begin transaction")
 
-		postRepository := repositoriesPost.NewPostRepository()
-		post := postRepository.Save(ctx, tx, domain.Post{
+		postRepository := post.NewPostRepository()
+		post := postRepository.Save(ctx, tx, post.Post{
 			Title:       "Post-5",
 			Body:        "Body-5",
 			User_Id:     user.Id,
@@ -316,11 +311,11 @@ func TestUpdatePost(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusOK, responseBody.Code)
 		assert.Equal(t, "UPDATED", responseBody.Status)
@@ -353,24 +348,24 @@ func TestUpdatePost(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusNotFound, responseBody.Code)
-		assert.Equal(t, "Not Found", responseBody.Status)
+		assert.Equal(t, "NOT FOUND", responseBody.Status)
 		assert.Equal(t, "post not found", responseBody.Data)
 	})
 
 	t.Run("bad request update post", func(t *testing.T) {
 		ctx := context.Background()
 		tx, err := db.Begin()
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to begin transaction")
 
-		postRepository := repositoriesPost.NewPostRepository()
-		post := postRepository.Save(ctx, tx, domain.Post{
+		postRepository := post.NewPostRepository()
+		post := postRepository.Save(ctx, tx, post.Post{
 			Title:       "Post-5",
 			Body:        "Body-5",
 			User_Id:     user.Id,
@@ -402,14 +397,14 @@ func TestUpdatePost(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusBadRequest, responseBody.Code)
-		assert.Equal(t, "Bad Request", responseBody.Status)
+		assert.Equal(t, "BAD REQUEST", responseBody.Status)
 	})
 
 }
@@ -426,10 +421,10 @@ func TestDeletePost(t *testing.T) {
 	t.Run("success delete post", func(t *testing.T) {
 		ctx := context.Background()
 		tx, err := db.Begin()
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to begin transaction")
 
-		postRepository := repositoriesPost.NewPostRepository()
-		post := postRepository.Save(ctx, tx, domain.Post{
+		postRepository := post.NewPostRepository()
+		post := postRepository.Save(ctx, tx, post.Post{
 			Title:       "Post-5",
 			Body:        "Body-5",
 			User_Id:     user.Id,
@@ -453,11 +448,11 @@ func TestDeletePost(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusOK, responseBody.Code)
 		assert.Equal(t, "DELETED", responseBody.Status)
@@ -478,13 +473,13 @@ func TestDeletePost(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusNotFound, responseBody.Code)
-		assert.Equal(t, "Not Found", responseBody.Status)
+		assert.Equal(t, "NOT FOUND", responseBody.Status)
 	})
 }

@@ -18,7 +18,7 @@ func ConnectDB() *sql.DB {
 	Host := env.DB.Host
 
 	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", DBUsername, DBPassword, Host, DBPort, DBName))
-	helpers.PanicError(err)
+	helpers.PanicError(err, "failed to connect database")
 
 	db.SetMaxIdleConns(10)
 	db.SetMaxOpenConns(100)

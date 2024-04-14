@@ -7,7 +7,6 @@ import (
 
 	"github.com/hutamatr/GoBlogify/app"
 	"github.com/hutamatr/GoBlogify/helpers"
-	"github.com/hutamatr/GoBlogify/model/web"
 )
 
 type AuthMiddleware struct {
@@ -47,7 +46,7 @@ func (middleware *AuthMiddleware) ServeHTTP(writer http.ResponseWriter, request 
 		writer.Header().Set("Content-Type", "application/json")
 		writer.WriteHeader(http.StatusUnauthorized)
 
-		ErrResponse := web.ResponseJSON{
+		ErrResponse := helpers.ResponseJSON{
 			Code:   http.StatusUnauthorized,
 			Status: "Unauthorized",
 			Data:   "token is required",
@@ -63,7 +62,7 @@ func (middleware *AuthMiddleware) ServeHTTP(writer http.ResponseWriter, request 
 		writer.Header().Set("Content-Type", "application/json")
 		writer.WriteHeader(http.StatusUnauthorized)
 
-		ErrResponse := web.ResponseJSON{
+		ErrResponse := helpers.ResponseJSON{
 			Code:   http.StatusUnauthorized,
 			Status: "Unauthorized",
 			Data:   err.Error(),
@@ -81,19 +80,19 @@ func (middleware *AuthMiddleware) ServeHTTP(writer http.ResponseWriter, request 
 
 	queryUserRole := "SELECT role_id FROM user WHERE id = ?"
 	rows, err := db.Query(queryUserRole, id)
-	helpers.PanicError(err)
+	helpers.PanicError(err, "failed to query user role")
 
 	defer rows.Close()
 	var userRoleId int
 
 	if rows.Next() {
 		err = rows.Scan(&userRoleId)
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to scan user role")
 	}
 
 	queryRole := "SELECT id FROM role WHERE name = ?"
 	rows2, err := db.Query(queryRole, "admin")
-	helpers.PanicError(err)
+	helpers.PanicError(err, "failed to query role")
 
 	defer rows2.Close()
 	var roleId int
@@ -101,7 +100,7 @@ func (middleware *AuthMiddleware) ServeHTTP(writer http.ResponseWriter, request 
 
 	if rows2.Next() {
 		err = rows2.Scan(&nullRoleId)
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to scan role")
 	}
 
 	if nullRoleId.Valid {
