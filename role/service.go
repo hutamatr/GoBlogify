@@ -65,6 +65,10 @@ func (service *RoleServiceImpl) FindAll(ctx context.Context, isAdmin bool) []Rol
 
 	var rolesData []RoleResponse
 
+	if len(roles) == 0 {
+		panic(exception.NewNotFoundError("roles not found"))
+	}
+
 	for _, role := range roles {
 		rolesData = append(rolesData, ToRoleResponse(role))
 	}

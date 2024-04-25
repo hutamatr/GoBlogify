@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/hutamatr/GoBlogify/app"
+	"github.com/hutamatr/GoBlogify/database"
 	"github.com/hutamatr/GoBlogify/helpers"
 )
 
@@ -14,12 +14,12 @@ type AuthMiddleware struct {
 }
 
 var publicRoutes = []string{
-	"/api/signup",
-	"/api/signin",
-	"/api/signup-admin",
-	"/api/signin-admin",
-	"/api/signout",
-	"/api/refresh",
+	"/api/v1/signup",
+	"/api/v1/signin",
+	"/api/v1/signup-admin",
+	"/api/v1/signin-admin",
+	"/api/v1/signout",
+	"/api/v1/refresh",
 }
 
 func NewAuthMiddleware(handler http.Handler) *AuthMiddleware {
@@ -46,10 +46,10 @@ func (middleware *AuthMiddleware) ServeHTTP(writer http.ResponseWriter, request 
 		writer.Header().Set("Content-Type", "application/json")
 		writer.WriteHeader(http.StatusUnauthorized)
 
-		ErrResponse := helpers.ResponseJSON{
+		ErrResponse := helpers.ErrorResponseJSON{
 			Code:   http.StatusUnauthorized,
 			Status: "Unauthorized",
-			Data:   "token is required",
+			Error:  "token is required",
 		}
 
 		helpers.EncodeJSONFromResponse(writer, ErrResponse)
@@ -62,10 +62,10 @@ func (middleware *AuthMiddleware) ServeHTTP(writer http.ResponseWriter, request 
 		writer.Header().Set("Content-Type", "application/json")
 		writer.WriteHeader(http.StatusUnauthorized)
 
-		ErrResponse := helpers.ResponseJSON{
+		ErrResponse := helpers.ErrorResponseJSON{
 			Code:   http.StatusUnauthorized,
 			Status: "Unauthorized",
-			Data:   err.Error(),
+			Error:  err.Error(),
 		}
 
 		helpers.EncodeJSONFromResponse(writer, ErrResponse)
@@ -75,7 +75,7 @@ func (middleware *AuthMiddleware) ServeHTTP(writer http.ResponseWriter, request 
 	idFloat := claims["sub"].(float64)
 	id := int(idFloat)
 
-	db := app.ConnectDB()
+	db := database.ConnectDB()
 	defer db.Close()
 
 	queryUserRole := "SELECT role_id FROM user WHERE id = ?"

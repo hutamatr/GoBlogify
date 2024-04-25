@@ -11,9 +11,12 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/hutamatr/GoBlogify/category"
 	"github.com/hutamatr/GoBlogify/helpers"
 	"github.com/hutamatr/GoBlogify/post"
+	"github.com/hutamatr/GoBlogify/role"
+	"github.com/hutamatr/GoBlogify/user"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -47,7 +50,7 @@ func TestCreatePost(t *testing.T) {
 			"category_id": ` + strconv.Itoa(category.Id) + `
 		}`)
 
-		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/post", postBody)
+		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/v1/posts", postBody)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -83,7 +86,7 @@ func TestCreatePost(t *testing.T) {
 			"category_id": ` + strconv.Itoa(category.Id) + `
 		}`)
 
-		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/post", postBody)
+		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/v1/posts", postBody)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -97,7 +100,7 @@ func TestCreatePost(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody helpers.ResponseJSON
+		var responseBody helpers.ErrorResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
@@ -108,7 +111,7 @@ func TestCreatePost(t *testing.T) {
 	})
 }
 
-func TestFindAllPost(t *testing.T) {
+func TestFindAllPostByUser(t *testing.T) {
 	db := ConnectDBTest()
 	DeleteDBTest(db)
 	router := SetupRouterTest(db)
@@ -133,7 +136,7 @@ func TestFindAllPost(t *testing.T) {
 
 		tx.Commit()
 
-		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/post", nil)
+		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/v1/posts/"+strconv.Itoa(user.Id), nil)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -158,12 +161,70 @@ func TestFindAllPost(t *testing.T) {
 		assert.Equal(t, post.Title, responseBody.Data.(map[string]interface{})["posts"].([]interface{})[0].(map[string]interface{})["title"])
 	})
 
-	t.Run("empty find all post", func(t *testing.T) {
+	t.Run("empty find all post by user", func(t *testing.T) {
 		DeleteDBTest(db)
 
-		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/post", nil)
+		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/v1/posts/"+strconv.Itoa(user.Id), nil)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
+
+		recorder := httptest.NewRecorder()
+
+		router.ServeHTTP(recorder, request)
+
+		response := recorder.Result()
+
+		assert.Equal(t, http.StatusNotFound, response.StatusCode)
+
+		body, err := io.ReadAll(response.Body)
+
+		var responseBody helpers.ErrorResponseJSON
+
+		json.Unmarshal(body, &responseBody)
+
+		helpers.PanicError(err, "failed to read response body")
+
+		assert.Equal(t, http.StatusNotFound, responseBody.Code)
+		assert.Equal(t, "NOT FOUND", responseBody.Status)
+	})
+}
+
+func TestFindAllPostByFollowed(t *testing.T) {
+	db := ConnectDBTest()
+	DeleteDBTest(db)
+	router := SetupRouterTest(db)
+	defer db.Close()
+
+	category := createCategoryTestPost(db)
+	newUser1, accessToken1 := createUserTestUser(db)
+
+	t.Run("success find all post by followed", func(t *testing.T) {
+		ctx := context.Background()
+		validator := validator.New()
+		tx, err := db.Begin()
+		helpers.PanicError(err, "failed to begin transaction")
+
+		postRepository := post.NewPostRepository()
+		post := postRepository.Save(ctx, tx, post.Post{
+			Title:       "Post-3",
+			Body:        "Body-3",
+			User_Id:     newUser1.Id,
+			Published:   true,
+			Category_Id: category.Id,
+		})
+
+		tx.Commit()
+
+		userRepository := user.NewUserRepository()
+		roleRepository := role.NewRoleRepository()
+		userService := user.NewUserService(userRepository, roleRepository, db, validator)
+		newUser2, accessToken2, _ := userService.SignUp(ctx, user.UserCreateRequest{Username: "userTest2", Email: "testing2@example.com", Password: "Password123!"})
+
+		followUser := createFollowTest(db, newUser2.Id, newUser1.Id)
+
+		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/v1/posts/"+strconv.Itoa(followUser.Follower_Id)+"/following", nil)
+		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken2)
 
 		recorder := httptest.NewRecorder()
 
@@ -183,11 +244,37 @@ func TestFindAllPost(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, responseBody.Code)
 		assert.Equal(t, "OK", responseBody.Status)
-		assert.Nil(t, responseBody.Data.(map[string]interface{})["posts"])
+		assert.Equal(t, post.Title, responseBody.Data.(map[string]interface{})["posts"].([]interface{})[0].(map[string]interface{})["title"])
+		assert.Equal(t, post.Body, responseBody.Data.(map[string]interface{})["posts"].([]interface{})[0].(map[string]interface{})["body"])
+	})
+
+	t.Run("not found find all post by followed", func(t *testing.T) {
+		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/v1/posts/"+strconv.Itoa(newUser1.Id)+"/following", nil)
+		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken1)
+
+		recorder := httptest.NewRecorder()
+
+		router.ServeHTTP(recorder, request)
+
+		response := recorder.Result()
+
+		assert.Equal(t, http.StatusNotFound, response.StatusCode)
+
+		body, err := io.ReadAll(response.Body)
+
+		var responseBody helpers.ResponseJSON
+
+		json.Unmarshal(body, &responseBody)
+
+		helpers.PanicError(err, "failed to read response body")
+
+		assert.Equal(t, http.StatusNotFound, responseBody.Code)
+		assert.Equal(t, "NOT FOUND", responseBody.Status)
 	})
 }
 
-func TestFindByIdPost(t *testing.T) {
+func TestFindPostById(t *testing.T) {
 	db := ConnectDBTest()
 	DeleteDBTest(db)
 	router := SetupRouterTest(db)
@@ -212,7 +299,7 @@ func TestFindByIdPost(t *testing.T) {
 
 		tx.Commit()
 
-		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/post/"+strconv.Itoa(post.Id), nil)
+		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/v1/post/"+strconv.Itoa(post.Id), nil)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -237,8 +324,8 @@ func TestFindByIdPost(t *testing.T) {
 		assert.Equal(t, post.Title, responseBody.Data.(map[string]interface{})["title"])
 	})
 
-	t.Run("not found find by id post", func(t *testing.T) {
-		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/post/1", nil)
+	t.Run("not found find post by id", func(t *testing.T) {
+		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/v1/post/1", nil)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -252,7 +339,7 @@ func TestFindByIdPost(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody helpers.ResponseJSON
+		var responseBody helpers.ErrorResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
@@ -260,7 +347,7 @@ func TestFindByIdPost(t *testing.T) {
 
 		assert.Equal(t, http.StatusNotFound, responseBody.Code)
 		assert.Equal(t, "NOT FOUND", responseBody.Status)
-		assert.Equal(t, "post not found", responseBody.Data)
+		assert.Equal(t, "post not found", responseBody.Error)
 	})
 }
 
@@ -297,7 +384,7 @@ func TestUpdatePost(t *testing.T) {
 			"category_id" : ` + strconv.Itoa(category.Id) + `
 		}`)
 
-		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/post/"+strconv.Itoa(post.Id), postBody)
+		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/v1/posts/"+strconv.Itoa(post.Id), postBody)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -334,7 +421,7 @@ func TestUpdatePost(t *testing.T) {
 			"category_id" : ` + strconv.Itoa(category.Id) + `
 		}`)
 
-		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/post/1", postBody)
+		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/v1/posts/1", postBody)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -348,7 +435,7 @@ func TestUpdatePost(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody helpers.ResponseJSON
+		var responseBody helpers.ErrorResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
@@ -356,7 +443,7 @@ func TestUpdatePost(t *testing.T) {
 
 		assert.Equal(t, http.StatusNotFound, responseBody.Code)
 		assert.Equal(t, "NOT FOUND", responseBody.Status)
-		assert.Equal(t, "post not found", responseBody.Data)
+		assert.Equal(t, "post not found", responseBody.Error)
 	})
 
 	t.Run("bad request update post", func(t *testing.T) {
@@ -383,7 +470,7 @@ func TestUpdatePost(t *testing.T) {
 			"category_id" : ` + strconv.Itoa(category.Id) + `
 		}`)
 
-		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/post/"+strconv.Itoa(post.Id), postBody)
+		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/v1/posts/"+strconv.Itoa(post.Id), postBody)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -397,7 +484,7 @@ func TestUpdatePost(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody helpers.ResponseJSON
+		var responseBody helpers.ErrorResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
@@ -434,7 +521,7 @@ func TestDeletePost(t *testing.T) {
 
 		tx.Commit()
 
-		request := httptest.NewRequest(http.MethodDelete, "http://localhost:8080/api/post/"+strconv.Itoa(post.Id), nil)
+		request := httptest.NewRequest(http.MethodDelete, "http://localhost:8080/api/v1/posts/"+strconv.Itoa(post.Id), nil)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -459,7 +546,7 @@ func TestDeletePost(t *testing.T) {
 	})
 
 	t.Run("not found delete post", func(t *testing.T) {
-		request := httptest.NewRequest(http.MethodDelete, "http://localhost:8080/api/post/100", nil)
+		request := httptest.NewRequest(http.MethodDelete, "http://localhost:8080/api/v1/posts/100", nil)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -473,7 +560,7 @@ func TestDeletePost(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody helpers.ResponseJSON
+		var responseBody helpers.ErrorResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 

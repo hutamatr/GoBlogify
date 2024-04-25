@@ -42,10 +42,10 @@ func (repository *UserRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, user
 }
 
 func (repository *UserRepositoryImpl) FindAll(ctx context.Context, tx *sql.Tx) []UserJoin {
-	query := `SELECT user.id, user.username, user.email, user.first_name, user.last_name, user.	role_id, user.created_at, user.updated_at, user.deleted_at,
-	(SELECT COUNT(*) FROM follow WHERE follow.followed_id = user.id) AS follower_count,
-	(SELECT COUNT(*) FROM follow WHERE follow.follower_id = user.id) AS following_count
-	FROM user WHERE is_deleted = false LIMIT 10`
+	query := `SELECT u.id, u.username, u.email, u.first_name, u.last_name, u.role_id, u.created_at, u.updated_at, u.deleted_at,
+	(SELECT COUNT(*) FROM follow f WHERE f.followed_id = u.id) AS follower_count,
+	(SELECT COUNT(*) FROM follow f WHERE f.follower_id = u.id) AS following_count
+	FROM user u WHERE u.is_deleted = false LIMIT 10`
 
 	rows, err := tx.QueryContext(ctx, query)
 
@@ -94,18 +94,18 @@ func (repository *UserRepositoryImpl) FindOne(ctx context.Context, tx *sql.Tx, u
 	var err error
 
 	if userId > 0 {
-		query := `SELECT user.id, user.username, user.email, user.first_name, user.last_name, user.role_id, user.created_at, user.updated_at, user.deleted_at,
-		(SELECT COUNT(*) FROM follow WHERE follow.followed_id = user.id) AS follower_count,
-		(SELECT COUNT(*) FROM follow WHERE follow.follower_id = user.id) AS following_count
-		FROM user WHERE user.id = ? AND user.is_deleted = false`
+		query := `SELECT u.id, u.username, u.email, u.first_name, u.last_name, u.role_id, u.created_at, u.updated_at, u.deleted_at,
+		(SELECT COUNT(*) FROM follow f WHERE f.followed_id = u.id) AS follower_count,
+		(SELECT COUNT(*) FROM follow f WHERE f.follower_id = u.id) AS following_count
+		FROM user u WHERE u.id = ? AND u.is_deleted = false`
 
 		rows, err = tx.QueryContext(ctx, query, userId)
 		helpers.PanicError(err, "failed to query one user")
 	} else if email != "" {
-		query := `SELECT user.id, user.username, user.email, user.first_name, user.last_name, user.role_id, user.created_at, user.updated_at, user.deleted_at,
-		(SELECT COUNT(*) FROM follow WHERE follow.followed_id = user.id) AS follower_count,
-		(SELECT COUNT(*) FROM follow WHERE follow.follower_id = user.id) AS following_count
-		FROM user WHERE user.email = ? AND user.is_deleted = false`
+		query := `SELECT u.id, u.username, u.email, u.first_name, u.last_name, u.role_id, u.created_at, u.updated_at, u.deleted_at,
+		(SELECT COUNT(*) FROM follow f WHERE f.followed_id = u.id) AS follower_count,
+		(SELECT COUNT(*) FROM follow f WHERE f.follower_id = u.id) AS following_count
+		FROM user u WHERE u.email = ? AND u.is_deleted = false`
 
 		rows, err = tx.QueryContext(ctx, query, email)
 		helpers.PanicError(err, "failed to query one user")

@@ -21,10 +21,7 @@ import (
 
 func createUserTestUser(db *sql.DB) (user.UserResponse, string) {
 	ctx := context.Background()
-	tx, err := db.Begin()
 	validator := validator.New()
-	helpers.PanicError(err, "failed to begin transaction")
-	defer tx.Commit()
 
 	userRepository := user.NewUserRepository()
 	roleRepository := role.NewRoleRepository()
@@ -47,7 +44,7 @@ func TestCreateAccount(t *testing.T) {
 			"password": "Password123!"
 		}`)
 
-		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/signup", accountBody)
+		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/v1/signup", accountBody)
 		request.Header.Add("Content-Type", "application/json")
 
 		recorder := httptest.NewRecorder()
@@ -79,7 +76,7 @@ func TestCreateAccount(t *testing.T) {
 			"password": "Password123!"
 		}`)
 
-		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/signup", accountBody)
+		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/v1/signup", accountBody)
 		request.Header.Add("Content-Type", "application/json")
 
 		recorder := httptest.NewRecorder()
@@ -92,7 +89,7 @@ func TestCreateAccount(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody helpers.ResponseJSON
+		var responseBody helpers.ErrorResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
@@ -117,7 +114,7 @@ func TestLogin(t *testing.T) {
 			"password": "Password123!"
 		}`)
 
-		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/signin", accountBody)
+		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/v1/signin", accountBody)
 		request.Header.Add("Content-Type", "application/json")
 
 		recorder := httptest.NewRecorder()
@@ -148,7 +145,7 @@ func TestLogin(t *testing.T) {
 			"password": ""
 		}`)
 
-		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/signin", accountBody)
+		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/v1/signin", accountBody)
 		request.Header.Add("Content-Type", "application/json")
 
 		recorder := httptest.NewRecorder()
@@ -161,7 +158,7 @@ func TestLogin(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody helpers.ResponseJSON
+		var responseBody helpers.ErrorResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
@@ -182,7 +179,7 @@ func TestFindAllUser(t *testing.T) {
 	_, accessToken := createAdminTestAdmin(db)
 
 	t.Run("success find all user", func(t *testing.T) {
-		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/user", nil)
+		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/v1/users", nil)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -206,9 +203,9 @@ func TestFindAllUser(t *testing.T) {
 		assert.Equal(t, "OK", responseBody.Status)
 	})
 
-	t.Run("failed find all user", func(t *testing.T) {
+	t.Run("not found find all user", func(t *testing.T) {
 		DeleteDBTest(db)
-		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/user", nil)
+		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/v1/users", nil)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -218,19 +215,18 @@ func TestFindAllUser(t *testing.T) {
 
 		response := recorder.Result()
 
-		assert.Equal(t, http.StatusOK, response.StatusCode)
+		assert.Equal(t, http.StatusNotFound, response.StatusCode)
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody helpers.ResponseJSON
+		var responseBody helpers.ErrorResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
 		helpers.PanicError(err, "failed to read response body")
 
-		assert.Equal(t, http.StatusOK, responseBody.Code)
-		assert.Equal(t, "OK", responseBody.Status)
-		assert.Nil(t, responseBody.Data)
+		assert.Equal(t, http.StatusNotFound, responseBody.Code)
+		assert.Equal(t, "NOT FOUND", responseBody.Status)
 	})
 }
 
@@ -243,7 +239,7 @@ func TestFindByIdUser(t *testing.T) {
 	user, accessToken := createUserTestUser(db)
 
 	t.Run("success find by id user", func(t *testing.T) {
-		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/user/"+strconv.Itoa(user.Id), nil)
+		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/v1/users/"+strconv.Itoa(user.Id), nil)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -271,7 +267,7 @@ func TestFindByIdUser(t *testing.T) {
 
 	t.Run("failed find by id user", func(t *testing.T) {
 		DeleteDBTest(db)
-		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/user/0", nil)
+		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/v1/users/0", nil)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -285,7 +281,7 @@ func TestFindByIdUser(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody helpers.ResponseJSON
+		var responseBody helpers.ErrorResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
@@ -312,7 +308,7 @@ func TestUpdateUser(t *testing.T) {
 			"last_name" : "testing" 
 		}`)
 
-		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/user/"+strconv.Itoa(user.Id), accountBody)
+		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/v1/users/"+strconv.Itoa(user.Id), accountBody)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -346,7 +342,7 @@ func TestUpdateUser(t *testing.T) {
 			"last_name" : "" 
 		}`)
 
-		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/user/"+strconv.Itoa(user.Id), accountBody)
+		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/v1/users/"+strconv.Itoa(user.Id), accountBody)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -360,7 +356,7 @@ func TestUpdateUser(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody helpers.ResponseJSON
+		var responseBody helpers.ErrorResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
@@ -380,7 +376,7 @@ func TestDeleteUser(t *testing.T) {
 	user, accessToken := createUserTestUser(db)
 
 	t.Run("success delete user", func(t *testing.T) {
-		request := httptest.NewRequest(http.MethodDelete, "http://localhost:8080/api/user/"+strconv.Itoa(user.Id), nil)
+		request := httptest.NewRequest(http.MethodDelete, "http://localhost:8080/api/v1/users/"+strconv.Itoa(user.Id), nil)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -405,7 +401,7 @@ func TestDeleteUser(t *testing.T) {
 	})
 
 	t.Run("failed delete user", func(t *testing.T) {
-		request := httptest.NewRequest(http.MethodDelete, "http://localhost:8080/api/user/0", nil)
+		request := httptest.NewRequest(http.MethodDelete, "http://localhost:8080/api/v1/users/0", nil)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -419,7 +415,7 @@ func TestDeleteUser(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody helpers.ResponseJSON
+		var responseBody helpers.ErrorResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 

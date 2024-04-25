@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/rs/zerolog/log"
+	"log"
 )
 
 func ServerRunningText() {
@@ -19,6 +19,6 @@ func ServerRunningText() {
 
 	for i := range serverRunningText {
 		<-ticker.C
-		log.Info().Msg(serverRunningText[i])
+		log.Printf("%s %s\n", "OK", serverRunningText[i])
 	}
 }

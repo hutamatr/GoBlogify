@@ -5,12 +5,14 @@ import (
 	"database/sql"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/hutamatr/GoBlogify/exception"
 	"github.com/hutamatr/GoBlogify/helpers"
 )
 
 type PostService interface {
 	Create(ctx context.Context, request PostCreateRequest) PostResponse
-	FindAll(ctx context.Context, limit, offset int) ([]PostResponse, int)
+	FindAllByUser(ctx context.Context, userId, limit, offset int) ([]PostResponse, int)
+	FindAllByFollowed(ctx context.Context, userId, limit, offset int) ([]PostResponseFollowed, int)
 	FindById(ctx context.Context, postId int) PostResponse
 	Update(ctx context.Context, request PostUpdateRequest) PostResponse
 	Delete(ctx context.Context, postId int)
@@ -51,18 +53,18 @@ func (service *PostServiceImpl) Create(ctx context.Context, request PostCreateRe
 	return ToPostResponse(createdPost)
 }
 
-func (service *PostServiceImpl) FindAll(ctx context.Context, limit, offset int) ([]PostResponse, int) {
+func (service *PostServiceImpl) FindAllByUser(ctx context.Context, userId, limit, offset int) ([]PostResponse, int) {
 	tx, err := service.db.Begin()
 	helpers.PanicError(err, "failed to begin transaction")
 	defer helpers.TxRollbackCommit(tx)
 
-	posts := service.repository.FindAll(ctx, tx, limit, offset)
-	countPosts := service.repository.CountPosts(ctx, tx)
+	posts := service.repository.FindAllByUser(ctx, tx, userId, limit, offset)
+	countPosts := service.repository.CountPostsByUser(ctx, tx, userId)
 
 	var postsData []PostResponse
 
 	if len(posts) == 0 {
-		return postsData, 0
+		panic(exception.NewNotFoundError("posts not found"))
 	}
 
 	for _, post := range posts {
@@ -70,6 +72,26 @@ func (service *PostServiceImpl) FindAll(ctx context.Context, limit, offset int) 
 	}
 
 	return postsData, countPosts
+}
+
+func (service *PostServiceImpl) FindAllByFollowed(ctx context.Context, userId, limit, offset int) ([]PostResponseFollowed, int) {
+	tx, err := service.db.Begin()
+	helpers.PanicError(err, "failed to begin transaction")
+	defer helpers.TxRollbackCommit(tx)
+
+	postsByFollowed := service.repository.FindAllByFollowed(ctx, tx, userId, limit, offset)
+
+	var postByFollowedData []PostResponseFollowed
+
+	if len(postsByFollowed) == 0 {
+		panic(exception.NewNotFoundError("posts not found"))
+	}
+
+	for _, post := range postsByFollowed {
+		postByFollowedData = append(postByFollowedData, ToPostResponseFollowed(post))
+	}
+
+	return postByFollowedData, len(postsByFollowed)
 }
 
 func (service *PostServiceImpl) FindById(ctx context.Context, postId int) PostResponse {

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/hutamatr/GoBlogify/exception"
 	"github.com/hutamatr/GoBlogify/helpers"
 )
 
@@ -60,7 +61,7 @@ func (service *CommentServiceImpl) FindCommentsByPost(ctx context.Context, postI
 	var commentsData []CommentResponse
 
 	if len(comments) == 0 {
-		return commentsData, 0
+		panic(exception.NewNotFoundError("comments not found"))
 	}
 
 	for _, comment := range comments {

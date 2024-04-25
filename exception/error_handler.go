@@ -26,10 +26,10 @@ func badRequestError(writer http.ResponseWriter, _ *http.Request, err interface{
 		writer.Header().Add("Content-Type", "application/json")
 		writer.WriteHeader(http.StatusBadRequest)
 
-		webResponseError := helpers.ResponseJSON{
+		webResponseError := helpers.ErrorResponseJSON{
 			Code:   http.StatusBadRequest,
 			Status: "BAD REQUEST",
-			Data:   exception.Error,
+			Error:  exception.Error,
 		}
 
 		helpers.EncodeJSONFromResponse(writer, webResponseError)
@@ -44,10 +44,10 @@ func validationError(writer http.ResponseWriter, _ *http.Request, err interface{
 		writer.Header().Add("Content-Type", "application/json")
 		writer.WriteHeader(http.StatusBadRequest)
 
-		ErrResponse := helpers.ResponseJSON{
+		ErrResponse := helpers.ErrorResponseJSON{
 			Code:   http.StatusBadRequest,
 			Status: "BAD REQUEST",
-			Data:   validationError.Error(),
+			Error:  validationError.Error(),
 		}
 
 		helpers.EncodeJSONFromResponse(writer, ErrResponse)
@@ -62,10 +62,10 @@ func notFoundError(writer http.ResponseWriter, _ *http.Request, err interface{})
 		writer.Header().Add("Content-Type", "application/json")
 		writer.WriteHeader(http.StatusNotFound)
 
-		ErrResponse := helpers.ResponseJSON{
+		ErrResponse := helpers.ErrorResponseJSON{
 			Code:   http.StatusNotFound,
 			Status: "NOT FOUND",
-			Data:   notFoundErr.Error,
+			Error:  notFoundErr.Error,
 		}
 
 		helpers.EncodeJSONFromResponse(writer, ErrResponse)
@@ -79,10 +79,10 @@ func internalServerError(writer http.ResponseWriter, _ *http.Request, err interf
 	writer.Header().Add("Content-Type", "application/json")
 	writer.WriteHeader(http.StatusInternalServerError)
 
-	ErrResponse := helpers.ResponseJSON{
+	ErrResponse := helpers.ErrorResponseJSON{
 		Code:   http.StatusInternalServerError,
 		Status: "INTERNAL SERVER ERROR",
-		Data:   err,
+		Error:  err,
 	}
 
 	helpers.EncodeJSONFromResponse(writer, ErrResponse)

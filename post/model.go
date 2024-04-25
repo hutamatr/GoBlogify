@@ -42,3 +42,17 @@ type PostJoin struct {
 	User       user.UserJoin
 	Category   category.Category
 }
+
+type PostJoinFollowed struct {
+	Id          int
+	User_Id     int
+	Category_Id int
+	Title       string
+	Body        string
+	Published   bool
+	Deleted     bool
+	Created_At  time.Time
+	Updated_At  time.Time
+	Deleted_At  time.Time
+	User        user.UserJoin
+}

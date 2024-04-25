@@ -9,8 +9,13 @@ func Cors() *cors.Cors {
 	appEnv := env.App.AppEnv
 
 	cors := cors.New(cors.Options{
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedOrigins:   []string{"http://localhost:8080", "http://127.0.0.1:8080"},
+		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedOrigins: []string{
+			"http://localhost:5173",
+			"http://127.0.0.1:5173",
+			"http://localhost:4173",
+			"http://127.0.0.1:4173",
+		},
 		AllowedHeaders:   []string{"Origin", "Authorization", "Content-Type"},
 		AllowCredentials: true,
 		Debug:            appEnv == "development",

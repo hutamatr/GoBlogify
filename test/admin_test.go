@@ -53,7 +53,7 @@ func TestCreateAdminAccount(t *testing.T) {
 			"admin_code": "` + adminCode + `"
 		}`)
 
-		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/signup-admin", accountBody)
+		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/v1/signup-admin", accountBody)
 		request.Header.Add("Content-Type", "application/json")
 
 		recorder := httptest.NewRecorder()
@@ -86,7 +86,7 @@ func TestCreateAdminAccount(t *testing.T) {
 			"admin_code": "` + adminCode + `"
 		}`)
 
-		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/signup-admin", accountBody)
+		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/v1/signup-admin", accountBody)
 		request.Header.Add("Content-Type", "application/json")
 
 		recorder := httptest.NewRecorder()
@@ -99,7 +99,7 @@ func TestCreateAdminAccount(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody helpers.ResponseJSON
+		var responseBody helpers.ErrorResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
@@ -124,7 +124,7 @@ func TestLoginAdmin(t *testing.T) {
 			"password": "Admin123!"
 		}`)
 
-		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/signin-admin", accountBody)
+		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/v1/signin-admin", accountBody)
 		request.Header.Add("Content-Type", "application/json")
 
 		recorder := httptest.NewRecorder()
@@ -155,7 +155,7 @@ func TestLoginAdmin(t *testing.T) {
 			"password": ""
 		}`)
 
-		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/signin-admin", accountBody)
+		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/v1/signin-admin", accountBody)
 		request.Header.Add("Content-Type", "application/json")
 
 		recorder := httptest.NewRecorder()
@@ -168,7 +168,7 @@ func TestLoginAdmin(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody helpers.ResponseJSON
+		var responseBody helpers.ErrorResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 

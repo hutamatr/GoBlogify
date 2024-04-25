@@ -10,7 +10,8 @@ import (
 
 type PostController interface {
 	CreatePostHandler(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
-	FindAllPostHandler(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
+	FindAllPostByUserHandler(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
+	FindAllPostByFollowedHandler(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
 	FindByIdPostHandler(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
 	UpdatePostHandler(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
 	DeletePostHandler(writer http.ResponseWriter, request *http.Request, params httprouter.Params)
@@ -42,16 +43,42 @@ func (controller *PostControllerImpl) CreatePostHandler(writer http.ResponseWrit
 	helpers.EncodeJSONFromResponse(writer, postResponse)
 }
 
-func (controller *PostControllerImpl) FindAllPostHandler(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+func (controller *PostControllerImpl) FindAllPostByUserHandler(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	id := params.ByName("userId")
+	userId, err := strconv.Atoi(id)
+	helpers.PanicError(err, "Invalid User Id")
 	limit, offset := helpers.GetLimitOffset(request)
 
-	posts, countPosts := controller.service.FindAll(request.Context(), limit, offset)
+	posts, countPosts := controller.service.FindAllByUser(request.Context(), userId, limit, offset)
 
 	postResponse := helpers.ResponseJSON{
 		Code:   http.StatusOK,
 		Status: "OK",
 		Data: map[string]interface{}{
 			"posts":  posts,
+			"limit":  limit,
+			"offset": offset,
+			"total":  countPosts,
+		},
+	}
+
+	writer.WriteHeader(http.StatusOK)
+	helpers.EncodeJSONFromResponse(writer, postResponse)
+}
+
+func (controller *PostControllerImpl) FindAllPostByFollowedHandler(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	id := params.ByName("userId")
+	userId, err := strconv.Atoi(id)
+	helpers.PanicError(err, "Invalid User Id")
+	limit, offset := helpers.GetLimitOffset(request)
+
+	postsByFollowed, countPosts := controller.service.FindAllByFollowed(request.Context(), userId, limit, offset)
+
+	postResponse := helpers.ResponseJSON{
+		Code:   http.StatusOK,
+		Status: "OK",
+		Data: map[string]interface{}{
+			"posts":  postsByFollowed,
 			"limit":  limit,
 			"offset": offset,
 			"total":  countPosts,

@@ -72,12 +72,17 @@ func (controller *FollowControllerImpl) FindAllFollowedByUserHandler(writer http
 
 	limit, offset := helpers.GetLimitOffset(request)
 
-	followedData := controller.service.FindAllFollowed(request.Context(), userId, limit, offset)
+	followedData, countFollowed := controller.service.FindAllFollowed(request.Context(), userId, limit, offset)
 
 	followedResponse := helpers.ResponseJSON{
 		Code:   http.StatusOK,
 		Status: "OK",
-		Data:   followedData,
+		Data: map[string]interface{}{
+			"followed": followedData,
+			"limit":    limit,
+			"offset":   offset,
+			"total":    countFollowed,
+		},
 	}
 
 	writer.WriteHeader(http.StatusOK)
@@ -91,12 +96,17 @@ func (controller *FollowControllerImpl) FindAllFollowerByUserHandler(writer http
 
 	limit, offset := helpers.GetLimitOffset(request)
 
-	followerData := controller.service.FindAllFollower(request.Context(), userId, limit, offset)
+	followerData, countFollower := controller.service.FindAllFollower(request.Context(), userId, limit, offset)
 
 	followerResponse := helpers.ResponseJSON{
 		Code:   http.StatusOK,
 		Status: "OK",
-		Data:   followerData,
+		Data: map[string]interface{}{
+			"follower": followerData,
+			"limit":    limit,
+			"offset":   offset,
+			"total":    countFollower,
+		},
 	}
 
 	writer.WriteHeader(http.StatusOK)
