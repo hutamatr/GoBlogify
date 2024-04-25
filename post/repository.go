@@ -11,11 +11,12 @@ import (
 
 type PostRepository interface {
 	Save(ctx context.Context, tx *sql.Tx, post Post) PostJoin
-	FindAll(ctx context.Context, tx *sql.Tx, limit, offset int) []PostJoin
+	FindAllByFollowed(ctx context.Context, tx *sql.Tx, userId, limit, offset int) []PostJoinFollowed
+	FindAllByUser(ctx context.Context, tx *sql.Tx, userId, limit, offset int) []PostJoin
 	FindById(ctx context.Context, tx *sql.Tx, postId int) PostJoin
 	Update(ctx context.Context, tx *sql.Tx, post Post) PostJoin
 	Delete(ctx context.Context, tx *sql.Tx, postId int)
-	CountPosts(ctx context.Context, tx *sql.Tx) int
+	CountPostsByUser(ctx context.Context, tx *sql.Tx, userId int) int
 }
 
 type PostRepositoryImpl struct {
@@ -44,10 +45,21 @@ func (repository *PostRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, post
 	return createdPost
 }
 
-func (repository *PostRepositoryImpl) FindAll(ctx context.Context, tx *sql.Tx, limit, offset int) []PostJoin {
-	query := "SELECT post.id, post.title, post.body, post.created_at, post.updated_at, post.deleted_at, post.is_deleted, post.is_published, user.id, user.role_id, user.username, user.email, user.first_name, user.last_name, user.created_at, user.updated_at, user.deleted_at, category.id, category.name, category.created_at, category.updated_at FROM post INNER JOIN category ON post.category_id = category.id INNER JOIN user ON post.user_id = user.id WHERE post.is_deleted = false LIMIT ? OFFSET ?"
+func (repository *PostRepositoryImpl) FindAllByUser(ctx context.Context, tx *sql.Tx, userId, limit, offset int) []PostJoin {
 
-	rows, err := tx.QueryContext(ctx, query, limit, offset)
+	query := `SELECT p.id, p.title, p.body, p.created_at, p.updated_at, p.deleted_at, p.is_deleted, p.is_published, u.id, u.role_id, u.username, u.email, u.first_name, u.last_name, u.created_at, u.updated_at, u.deleted_at, 
+	(SELECT COUNT(*) FROM follow f WHERE f.followed_id = u.id) AS follower_count,
+	(SELECT COUNT(*) FROM follow f WHERE f.follower_id = u.id) AS following_count,
+	c.id, c.name, c.created_at, c.updated_at 
+	FROM user u 
+	JOIN post p 
+	ON u.id = p.user_id 
+	JOIN category c 
+	ON p.category_id = c.id 
+	WHERE p.user_id = ? 
+	AND p.is_deleted = false LIMIT ? OFFSET ?`
+
+	rows, err := tx.QueryContext(ctx, query, userId, limit, offset)
 
 	helpers.PanicError(err, "failed to query all posts")
 
@@ -63,7 +75,7 @@ func (repository *PostRepositoryImpl) FindAll(ctx context.Context, tx *sql.Tx, l
 	for rows.Next() {
 		var post PostJoin
 
-		err := rows.Scan(&post.Id, &post.Title, &post.Body, &post.Created_At, &post.Updated_At, &deletedAtPost, &post.Deleted, &post.Published, &post.User.Id, &post.User.Role_Id, &post.User.Username, &post.User.Email, &firstName, &lastName, &post.User.Created_At, &post.User.Updated_At, &deletedAtUser, &post.Category.Id, &post.Category.Name, &post.Category.Created_At, &post.Category.Updated_At)
+		err := rows.Scan(&post.Id, &post.Title, &post.Body, &post.Created_At, &post.Updated_At, &deletedAtPost, &post.Deleted, &post.Published, &post.User.Id, &post.User.Role_Id, &post.User.Username, &post.User.Email, &firstName, &lastName, &post.User.Created_At, &post.User.Updated_At, &deletedAtUser, &post.User.Follower, &post.User.Following, &post.Category.Id, &post.Category.Name, &post.Category.Created_At, &post.Category.Updated_At)
 
 		helpers.PanicError(err, "failed to scan all posts")
 
@@ -94,8 +106,76 @@ func (repository *PostRepositoryImpl) FindAll(ctx context.Context, tx *sql.Tx, l
 	return posts
 }
 
+func (repository *PostRepositoryImpl) FindAllByFollowed(ctx context.Context, tx *sql.Tx, userId, limit, offset int) []PostJoinFollowed {
+
+	query := `SELECT p.id, p.title, p.body, p.created_at, p.updated_at, p.deleted_at, p.is_deleted, p.is_published, u.id, u.role_id, u.username, u.email, u.first_name, u.last_name, u.created_at, u.updated_at, u.deleted_at, 
+	(SELECT COUNT(*) FROM follow f WHERE f.followed_id = u.id) AS follower_count,
+	(SELECT COUNT(*) FROM follow f WHERE f.follower_id = u.id) AS following_count 
+	FROM user u 
+	JOIN post p 
+	ON u.id = p.user_id 
+	JOIN follow f 
+	ON u.id = f.followed_id 
+	WHERE f.follower_id = ? 
+	AND p.is_deleted = false 
+	ORDER BY p.created_at DESC LIMIT ? OFFSET ?`
+
+	rows, err := tx.QueryContext(ctx, query, userId, limit, offset)
+
+	helpers.PanicError(err, "failed to query post by user followed")
+
+	defer rows.Close()
+
+	var postsByFollowed []PostJoinFollowed
+
+	var deletedAtPost sql.NullTime
+	var deletedAtUser sql.NullTime
+	var firstName sql.NullString
+	var lastName sql.NullString
+
+	for rows.Next() {
+		var postByFollowed PostJoinFollowed
+		err := rows.Scan(&postByFollowed.Id, &postByFollowed.Title, &postByFollowed.Body, &postByFollowed.Created_At, &postByFollowed.Updated_At, &deletedAtPost, &postByFollowed.Deleted, &postByFollowed.Published, &postByFollowed.User.Id, &postByFollowed.User.Role_Id, &postByFollowed.User.Username, &postByFollowed.User.Email, &firstName, &lastName, &postByFollowed.User.Created_At, &postByFollowed.User.Updated_At, &deletedAtUser, &postByFollowed.User.Follower, &postByFollowed.User.Following)
+
+		helpers.PanicError(err, "failed to scan post by user followed")
+
+		if deletedAtPost.Valid {
+			postByFollowed.Deleted_At = deletedAtPost.Time
+		} else {
+			postByFollowed.Deleted_At = time.Time{}
+		}
+		if deletedAtUser.Valid {
+			postByFollowed.User.Deleted_At = deletedAtUser.Time
+		} else {
+			postByFollowed.User.Deleted_At = time.Time{}
+		}
+
+		if firstName.Valid {
+			postByFollowed.User.First_Name = firstName.String
+		} else {
+			postByFollowed.User.First_Name = ""
+		}
+		if lastName.Valid {
+			postByFollowed.User.Last_Name = lastName.String
+		} else {
+			postByFollowed.User.Last_Name = ""
+		}
+
+		postsByFollowed = append(postsByFollowed, postByFollowed)
+	}
+
+	return postsByFollowed
+}
+
 func (repository *PostRepositoryImpl) FindById(ctx context.Context, tx *sql.Tx, postId int) PostJoin {
-	query := "SELECT post.id, post.title, post.body, post.created_at, post.updated_at, post.deleted_at, post.is_deleted, post.is_published, user.id, user.role_id, user.username, user.email, user.first_name, user.last_name, user.created_at, user.updated_at, user.deleted_at, category.id, category.name, category.created_at, category.updated_at FROM post INNER JOIN category ON post.category_id = category.id INNER JOIN user ON post.user_id = user.id WHERE post.id = ? AND post.is_deleted = false"
+
+	query := `SELECT p.id, p.title, p.body, p.created_at, p.updated_at, p.deleted_at, p.is_deleted, p.is_published, u.id, u.role_id, u.username, u.email, u.first_name, u.last_name, u.created_at, u.updated_at, u.deleted_at, c.id, c.name, c.created_at, c.updated_at 
+	FROM user u 
+	JOIN post p 
+	ON u.id = p.user_id 
+	JOIN category c 
+	ON p.category_id = c.id 
+	WHERE p.id = ? AND p.is_deleted = false`
 
 	rows, err := tx.QueryContext(ctx, query, postId)
 
@@ -171,10 +251,10 @@ func (repository *PostRepositoryImpl) Delete(ctx context.Context, tx *sql.Tx, po
 	helpers.PanicError(err, "failed to display rows affected delete post")
 }
 
-func (repository *PostRepositoryImpl) CountPosts(ctx context.Context, tx *sql.Tx) int {
-	query := "SELECT COUNT(*) FROM post WHERE is_deleted = false"
+func (repository *PostRepositoryImpl) CountPostsByUser(ctx context.Context, tx *sql.Tx, userId int) int {
+	query := "SELECT COUNT(*) FROM post WHERE is_deleted = false AND user_id = ?"
 
-	rows, err := tx.QueryContext(ctx, query)
+	rows, err := tx.QueryContext(ctx, query, userId)
 
 	helpers.PanicError(err, "failed to query count posts")
 
