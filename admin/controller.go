@@ -17,7 +17,7 @@ type AdminControllerImpl struct {
 	service AdminService
 }
 
-func NewAdminControllerImpl(service AdminService) AdminController {
+func NewAdminController(service AdminService) AdminController {
 	return &AdminControllerImpl{
 		service: service,
 	}

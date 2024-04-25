@@ -41,7 +41,11 @@ func (repository *CommentRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, c
 }
 
 func (repository *CommentRepositoryImpl) FindCommentsByPost(ctx context.Context, tx *sql.Tx, postId, limit, offset int) []CommentJoin {
-	query := "SELECT comment.id, comment.content, comment.post_id, comment.user_id, comment.created_at, comment.updated_at, user.id, user.username, user.email FROM comment INNER JOIN user ON user.id = comment.user_id WHERE post_id = ? LIMIT ? OFFSET ?"
+	query := `SELECT c.id, c.content, c.post_id, c.user_id, c.created_at, c.updated_at, u.id, u.username, u.email 
+	FROM user u 
+	JOIN comment c 
+	ON u.id = c.user_id 
+	WHERE c.post_id = ? LIMIT ? OFFSET ?`
 
 	rows, err := tx.QueryContext(ctx, query, postId, limit, offset)
 
@@ -63,7 +67,7 @@ func (repository *CommentRepositoryImpl) FindCommentsByPost(ctx context.Context,
 }
 
 func (repository *CommentRepositoryImpl) FindById(ctx context.Context, tx *sql.Tx, commentId int) CommentJoin {
-	query := "SELECT comment.id, comment.content, comment.post_id, comment.user_id, comment.created_at, comment.updated_at, user.id, user.username, user.email FROM comment INNER JOIN user ON user.id = comment.user_id WHERE comment.id = ?"
+	query := "SELECT c.id, c.content, c.post_id, c.user_id, c.created_at, c.updated_at, u.id, u.username, u.email FROM user u JOIN comment c ON u.id = c.user_id WHERE c.id = ?"
 
 	rows, err := tx.QueryContext(ctx, query, commentId)
 

@@ -63,7 +63,7 @@ func (service *CategoryServiceImpl) FindAll(ctx context.Context, limit, offset i
 	var categoriesData []CategoryResponse
 
 	if len(categories) == 0 {
-		return categoriesData, 0
+		panic(exception.NewNotFoundError("categories not found"))
 	}
 
 	for _, category := range categories {
