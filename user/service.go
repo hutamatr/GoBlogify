@@ -145,6 +145,10 @@ func (service *UserServiceImpl) FindAll(ctx context.Context, isAdmin bool) []Use
 
 	var usersData []UserResponse
 
+	if len(users) == 0 {
+		panic(exception.NewNotFoundError("users not found"))
+	}
+
 	for _, user := range users {
 		usersData = append(usersData, ToUserResponse(user))
 	}
