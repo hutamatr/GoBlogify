@@ -52,7 +52,7 @@ func TestCreateComment(t *testing.T) {
 			"post_id": ` + strconv.Itoa(post.Id) + `
 		}`)
 
-		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/comment", commentBody)
+		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/v1/comments", commentBody)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -86,7 +86,7 @@ func TestCreateComment(t *testing.T) {
 			"post_id": ` + strconv.Itoa(post.Id) + `
 		}`)
 
-		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/comment", commentBody)
+		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/v1/comments", commentBody)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -100,7 +100,7 @@ func TestCreateComment(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody helpers.ResponseJSON
+		var responseBody helpers.ErrorResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
@@ -135,7 +135,7 @@ func TestFindCommentByPost(t *testing.T) {
 
 		tx.Commit()
 
-		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/comment?postId="+strconv.Itoa(post.Id), nil)
+		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/v1/comments?postId="+strconv.Itoa(post.Id), nil)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -164,7 +164,7 @@ func TestFindCommentByPost(t *testing.T) {
 	t.Run("empty find comment by post", func(t *testing.T) {
 		DeleteDBTest(db)
 
-		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/comment?postId="+strconv.Itoa(post.Id), nil)
+		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/v1/comments?postId="+strconv.Itoa(post.Id), nil)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -174,19 +174,18 @@ func TestFindCommentByPost(t *testing.T) {
 
 		response := recorder.Result()
 
-		assert.Equal(t, http.StatusOK, response.StatusCode)
+		assert.Equal(t, http.StatusNotFound, response.StatusCode)
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody helpers.ResponseJSON
+		var responseBody helpers.ErrorResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
 		helpers.PanicError(err, "failed to read response body")
 
-		assert.Equal(t, http.StatusOK, responseBody.Code)
-		assert.Equal(t, "OK", responseBody.Status)
-		assert.Nil(t, responseBody.Data.(map[string]interface{})["comments"])
+		assert.Equal(t, http.StatusNotFound, responseBody.Code)
+		assert.Equal(t, "NOT FOUND", responseBody.Status)
 	})
 }
 
@@ -214,7 +213,7 @@ func TestFindCommentById(t *testing.T) {
 
 		tx.Commit()
 
-		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/comment/"+strconv.Itoa(comment.Id), nil)
+		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/v1/comments/"+strconv.Itoa(comment.Id), nil)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -240,7 +239,7 @@ func TestFindCommentById(t *testing.T) {
 	})
 
 	t.Run("not found find comment by id", func(t *testing.T) {
-		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/comment/1", nil)
+		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/v1/comments/1", nil)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -254,7 +253,7 @@ func TestFindCommentById(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody helpers.ResponseJSON
+		var responseBody helpers.ErrorResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
@@ -262,7 +261,7 @@ func TestFindCommentById(t *testing.T) {
 
 		assert.Equal(t, http.StatusNotFound, responseBody.Code)
 		assert.Equal(t, "NOT FOUND", responseBody.Status)
-		assert.Equal(t, "comment not found", responseBody.Data)
+		assert.Equal(t, "comment not found", responseBody.Error)
 	})
 }
 
@@ -296,7 +295,7 @@ func TestUpdateComment(t *testing.T) {
 			"post_id": ` + strconv.Itoa(post.Id) + `
 		}`)
 
-		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/comment/"+strconv.Itoa(comment.Id), commentBody)
+		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/v1/comments/"+strconv.Itoa(comment.Id), commentBody)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -328,7 +327,7 @@ func TestUpdateComment(t *testing.T) {
 			"post_id": ` + strconv.Itoa(post.Id) + `
 		}`)
 
-		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/comment/1", commentBody)
+		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/v1/comments/1", commentBody)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -342,7 +341,7 @@ func TestUpdateComment(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody helpers.ResponseJSON
+		var responseBody helpers.ErrorResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
@@ -350,7 +349,7 @@ func TestUpdateComment(t *testing.T) {
 
 		assert.Equal(t, http.StatusNotFound, responseBody.Code)
 		assert.Equal(t, "NOT FOUND", responseBody.Status)
-		assert.Equal(t, "comment not found", responseBody.Data)
+		assert.Equal(t, "comment not found", responseBody.Error)
 	})
 
 	t.Run("bad request update comment", func(t *testing.T) {
@@ -373,7 +372,7 @@ func TestUpdateComment(t *testing.T) {
 			"post_id": ` + strconv.Itoa(post.Id) + `
 		}`)
 
-		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/comment/"+strconv.Itoa(comment.Id), commentBody)
+		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/v1/comments/"+strconv.Itoa(comment.Id), commentBody)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -387,7 +386,7 @@ func TestUpdateComment(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody helpers.ResponseJSON
+		var responseBody helpers.ErrorResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
@@ -423,7 +422,7 @@ func TestDeleteComment(t *testing.T) {
 
 		tx.Commit()
 
-		request := httptest.NewRequest(http.MethodDelete, "http://localhost:8080/api/comment/"+strconv.Itoa(comment.Id), nil)
+		request := httptest.NewRequest(http.MethodDelete, "http://localhost:8080/api/v1/comments/"+strconv.Itoa(comment.Id), nil)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -448,7 +447,7 @@ func TestDeleteComment(t *testing.T) {
 	})
 
 	t.Run("not found delete comment", func(t *testing.T) {
-		request := httptest.NewRequest(http.MethodDelete, "http://localhost:8080/api/comment/100", nil)
+		request := httptest.NewRequest(http.MethodDelete, "http://localhost:8080/api/v1/comments/100", nil)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -462,7 +461,7 @@ func TestDeleteComment(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody helpers.ResponseJSON
+		var responseBody helpers.ErrorResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 

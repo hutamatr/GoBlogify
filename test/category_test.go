@@ -28,7 +28,7 @@ func TestCreateCategory(t *testing.T) {
 			"name": "category-1"
 		}`)
 
-		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/category", categoryBody)
+		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/v1/categories", categoryBody)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -57,7 +57,7 @@ func TestCreateCategory(t *testing.T) {
 		categoryBody := strings.NewReader(`{
 			"name": ""
 		}`)
-		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/category", categoryBody)
+		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/v1/categories", categoryBody)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -71,7 +71,7 @@ func TestCreateCategory(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody helpers.ResponseJSON
+		var responseBody helpers.ErrorResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
@@ -101,7 +101,7 @@ func TestFindAllCategory(t *testing.T) {
 
 		tx.Commit()
 
-		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/category", nil)
+		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/v1/categories", nil)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -130,7 +130,7 @@ func TestFindAllCategory(t *testing.T) {
 	t.Run("empty find all category", func(t *testing.T) {
 		DeleteDBTest(db)
 
-		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/category", nil)
+		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/v1/categories", nil)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -140,19 +140,18 @@ func TestFindAllCategory(t *testing.T) {
 
 		response := recorder.Result()
 
-		assert.Equal(t, http.StatusOK, response.StatusCode)
+		assert.Equal(t, http.StatusNotFound, response.StatusCode)
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody helpers.ResponseJSON
+		var responseBody helpers.ErrorResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
 		helpers.PanicError(err, "failed to read response body")
 
-		assert.Equal(t, http.StatusOK, responseBody.Code)
-		assert.Equal(t, "OK", responseBody.Status)
-		assert.Nil(t, responseBody.Data.(map[string]interface{})["categories"])
+		assert.Equal(t, http.StatusNotFound, responseBody.Code)
+		assert.Equal(t, "NOT FOUND", responseBody.Status)
 	})
 }
 
@@ -174,7 +173,7 @@ func TestFindByIdCategory(t *testing.T) {
 
 		tx.Commit()
 
-		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/category/"+strconv.Itoa(category.Id), nil)
+		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/v1/categories/"+strconv.Itoa(category.Id), nil)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -200,7 +199,7 @@ func TestFindByIdCategory(t *testing.T) {
 	})
 
 	t.Run("not found find by id category", func(t *testing.T) {
-		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/category/1", nil)
+		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/v1/categories/1", nil)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -214,7 +213,7 @@ func TestFindByIdCategory(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody helpers.ResponseJSON
+		var responseBody helpers.ErrorResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
@@ -222,7 +221,7 @@ func TestFindByIdCategory(t *testing.T) {
 
 		assert.Equal(t, http.StatusNotFound, responseBody.Code)
 		assert.Equal(t, "NOT FOUND", responseBody.Status)
-		assert.Equal(t, "category not found", responseBody.Data)
+		assert.Equal(t, "category not found", responseBody.Error)
 	})
 }
 
@@ -248,7 +247,7 @@ func TestUpdateCategory(t *testing.T) {
 			"name": "category-6"
 		}`)
 
-		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/category/"+strconv.Itoa(category.Id), categoryBody)
+		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/v1/categories/"+strconv.Itoa(category.Id), categoryBody)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -279,7 +278,7 @@ func TestUpdateCategory(t *testing.T) {
 			"name": "category-6"
 		}`)
 
-		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/category/1", categoryBody)
+		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/v1/categories/1", categoryBody)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -293,7 +292,7 @@ func TestUpdateCategory(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody helpers.ResponseJSON
+		var responseBody helpers.ErrorResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
@@ -301,7 +300,7 @@ func TestUpdateCategory(t *testing.T) {
 
 		assert.Equal(t, http.StatusNotFound, responseBody.Code)
 		assert.Equal(t, "NOT FOUND", responseBody.Status)
-		assert.Equal(t, "category not found", responseBody.Data)
+		assert.Equal(t, "category not found", responseBody.Error)
 	})
 
 	t.Run("bad request update category", func(t *testing.T) {
@@ -318,7 +317,7 @@ func TestUpdateCategory(t *testing.T) {
 			"name": ""
 		}`)
 
-		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/category/"+strconv.Itoa(category.Id), categoryBody)
+		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/v1/categories/"+strconv.Itoa(category.Id), categoryBody)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -332,7 +331,7 @@ func TestUpdateCategory(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody helpers.ResponseJSON
+		var responseBody helpers.ErrorResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
@@ -340,7 +339,7 @@ func TestUpdateCategory(t *testing.T) {
 
 		assert.Equal(t, http.StatusBadRequest, responseBody.Code)
 		assert.Equal(t, "BAD REQUEST", responseBody.Status)
-		assert.Equal(t, "Key: 'CategoryUpdateRequest.Name' Error:Field validation for 'Name' failed on the 'required' tag", responseBody.Data)
+		assert.Equal(t, "Key: 'CategoryUpdateRequest.Name' Error:Field validation for 'Name' failed on the 'required' tag", responseBody.Error)
 	})
 
 }
@@ -363,7 +362,7 @@ func TestDeleteCategory(t *testing.T) {
 
 		tx.Commit()
 
-		request := httptest.NewRequest(http.MethodDelete, "http://localhost:8080/api/category/"+strconv.Itoa(category.Id), nil)
+		request := httptest.NewRequest(http.MethodDelete, "http://localhost:8080/api/v1/categories/"+strconv.Itoa(category.Id), nil)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -388,7 +387,7 @@ func TestDeleteCategory(t *testing.T) {
 	})
 
 	t.Run("not found delete category", func(t *testing.T) {
-		request := httptest.NewRequest(http.MethodDelete, "http://localhost:8080/api/category/1", nil)
+		request := httptest.NewRequest(http.MethodDelete, "http://localhost:8080/api/v1/categories/1", nil)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -402,7 +401,7 @@ func TestDeleteCategory(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody helpers.ResponseJSON
+		var responseBody helpers.ErrorResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 

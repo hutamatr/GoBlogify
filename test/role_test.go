@@ -28,7 +28,7 @@ func TestCreateRole(t *testing.T) {
 			"name": "user"
 		}`)
 
-		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/role", roleBody)
+		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/v1/roles", roleBody)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -57,7 +57,7 @@ func TestCreateRole(t *testing.T) {
 		roleBody := strings.NewReader(`{
 			"name": ""
 		}`)
-		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/role", roleBody)
+		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/v1/roles", roleBody)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -71,7 +71,7 @@ func TestCreateRole(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody helpers.ResponseJSON
+		var responseBody helpers.ErrorResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
@@ -100,7 +100,7 @@ func TestFindAllRole(t *testing.T) {
 
 		tx.Commit()
 
-		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/role", nil)
+		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/v1/roles", nil)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -129,7 +129,7 @@ func TestFindAllRole(t *testing.T) {
 	t.Run("empty find all role", func(t *testing.T) {
 		DeleteDBTest(db)
 
-		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/role", nil)
+		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/v1/roles", nil)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -139,19 +139,18 @@ func TestFindAllRole(t *testing.T) {
 
 		response := recorder.Result()
 
-		assert.Equal(t, http.StatusOK, response.StatusCode)
+		assert.Equal(t, http.StatusNotFound, response.StatusCode)
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody helpers.ResponseJSON
+		var responseBody helpers.ErrorResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
 		helpers.PanicError(err, "failed to read response body")
 
-		assert.Equal(t, http.StatusOK, responseBody.Code)
-		assert.Equal(t, "OK", responseBody.Status)
-		assert.Nil(t, responseBody.Data)
+		assert.Equal(t, http.StatusNotFound, responseBody.Code)
+		assert.Equal(t, "NOT FOUND", responseBody.Status)
 	})
 }
 
@@ -173,7 +172,7 @@ func TestFindByIdRole(t *testing.T) {
 
 		tx.Commit()
 
-		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/role/"+strconv.Itoa(role.Id), nil)
+		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/v1/roles/"+strconv.Itoa(role.Id), nil)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -199,7 +198,7 @@ func TestFindByIdRole(t *testing.T) {
 	})
 
 	t.Run("not found find by id role", func(t *testing.T) {
-		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/role/10", nil)
+		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/v1/roles/10", nil)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -213,7 +212,7 @@ func TestFindByIdRole(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody helpers.ResponseJSON
+		var responseBody helpers.ErrorResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
@@ -221,7 +220,7 @@ func TestFindByIdRole(t *testing.T) {
 
 		assert.Equal(t, http.StatusNotFound, responseBody.Code)
 		assert.Equal(t, "NOT FOUND", responseBody.Status)
-		assert.Equal(t, "role not found", responseBody.Data)
+		assert.Equal(t, "role not found", responseBody.Error)
 	})
 }
 
@@ -247,7 +246,7 @@ func TestUpdateRole(t *testing.T) {
 			"name": "user-2"
 		}`)
 
-		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/role/"+strconv.Itoa(role.Id), roleBody)
+		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/v1/roles/"+strconv.Itoa(role.Id), roleBody)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -278,7 +277,7 @@ func TestUpdateRole(t *testing.T) {
 			"name": "user"
 		}`)
 
-		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/role/10", roleBody)
+		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/v1/roles/10", roleBody)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -292,7 +291,7 @@ func TestUpdateRole(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody helpers.ResponseJSON
+		var responseBody helpers.ErrorResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
@@ -300,7 +299,7 @@ func TestUpdateRole(t *testing.T) {
 
 		assert.Equal(t, http.StatusNotFound, responseBody.Code)
 		assert.Equal(t, "NOT FOUND", responseBody.Status)
-		assert.Equal(t, "role not found", responseBody.Data)
+		assert.Equal(t, "role not found", responseBody.Error)
 	})
 
 	t.Run("bad request update role", func(t *testing.T) {
@@ -317,7 +316,7 @@ func TestUpdateRole(t *testing.T) {
 			"name": ""
 		}`)
 
-		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/role/"+strconv.Itoa(role.Id), RoleBody)
+		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/v1/roles/"+strconv.Itoa(role.Id), RoleBody)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -331,7 +330,7 @@ func TestUpdateRole(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody helpers.ResponseJSON
+		var responseBody helpers.ErrorResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
@@ -339,7 +338,7 @@ func TestUpdateRole(t *testing.T) {
 
 		assert.Equal(t, http.StatusBadRequest, responseBody.Code)
 		assert.Equal(t, "BAD REQUEST", responseBody.Status)
-		assert.Equal(t, "Key: 'RoleUpdateRequest.Name' Error:Field validation for 'Name' failed on the 'required' tag", responseBody.Data)
+		assert.Equal(t, "Key: 'RoleUpdateRequest.Name' Error:Field validation for 'Name' failed on the 'required' tag", responseBody.Error)
 	})
 
 }
@@ -362,7 +361,7 @@ func TestDeleteRole(t *testing.T) {
 
 		tx.Commit()
 
-		request := httptest.NewRequest(http.MethodDelete, "http://localhost:8080/api/role/"+strconv.Itoa(role.Id), nil)
+		request := httptest.NewRequest(http.MethodDelete, "http://localhost:8080/api/v1/roles/"+strconv.Itoa(role.Id), nil)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -387,7 +386,7 @@ func TestDeleteRole(t *testing.T) {
 	})
 
 	t.Run("not found delete Role", func(t *testing.T) {
-		request := httptest.NewRequest(http.MethodDelete, "http://localhost:8080/api/role/10", nil)
+		request := httptest.NewRequest(http.MethodDelete, "http://localhost:8080/api/v1/roles/10", nil)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -401,7 +400,7 @@ func TestDeleteRole(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody helpers.ResponseJSON
+		var responseBody helpers.ErrorResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
