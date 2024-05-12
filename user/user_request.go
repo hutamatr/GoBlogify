@@ -1,14 +1,15 @@
 package user
 
 type UserCreateRequest struct {
-	Username string `json:"username" validate:"required,min=1,max=24"`
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required,min=1,max=24"`
+	Username         string `json:"username" validate:"required,min=1,max=24"`
+	Email            string `json:"email" validate:"required,email"`
+	Password         string `json:"password" validate:"required,password=6,max=24"`
+	Confirm_Password string `json:"confirm_password" validate:"required,confirm_password=Password"`
 }
 
 type UserLoginRequest struct {
 	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required"`
+	Password string `json:"password" validate:"required,password=6,max=24"`
 }
 
 type UserUpdateRequest struct {

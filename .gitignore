@@ -21,8 +21,10 @@
 go.work
 
 .env
-.env.*
+.env.production
+.env.development
+.env.test
 .env.*.local
 
-error-log.log
+*.log
 

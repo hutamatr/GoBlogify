@@ -3,8 +3,8 @@ package main
 import (
 	"net/http"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/hutamatr/GoBlogify/database"
+	"github.com/hutamatr/GoBlogify/exception"
 	"github.com/hutamatr/GoBlogify/utils"
 
 	"github.com/hutamatr/GoBlogify/helpers"
@@ -17,14 +17,16 @@ import (
 
 func main() {
 	db := database.ConnectDB()
-	validator := validator.New(validator.WithRequiredStructEnabled())
+	if err := helpers.CustomValidation(); err != nil {
+		panic(exception.NewBadRequestError("invalid request"))
+	}
 
-	roleController := utils.InitializedRoleController(db, validator)
-	userController := utils.InitializedUserController(db, validator)
-	adminController := utils.InitializedAdminController(db, validator)
-	postController := utils.InitializedPostController(db, validator)
-	commentController := utils.InitializedCommentController(db, validator)
-	categoryController := utils.InitializedCategoryController(db, validator)
+	roleController := utils.InitializedRoleController(db, helpers.Validate)
+	userController := utils.InitializedUserController(db, helpers.Validate)
+	adminController := utils.InitializedAdminController(db, helpers.Validate)
+	postController := utils.InitializedPostController(db, helpers.Validate)
+	commentController := utils.InitializedCommentController(db, helpers.Validate)
+	categoryController := utils.InitializedCategoryController(db, helpers.Validate)
 	followController := utils.InitializedFollowController(db)
 
 	router := routes.Router(&routes.RouterControllers{
