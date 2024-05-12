@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-playground/validator/v10"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/hutamatr/GoBlogify/routes"
 	"github.com/hutamatr/GoBlogify/utils"
@@ -57,14 +56,14 @@ func DeleteDBTest(db *sql.DB) {
 }
 
 func SetupRouterTest(db *sql.DB) http.Handler {
-	validator := validator.New()
+	helpers.CustomValidation()
 
-	roleController := utils.InitializedRoleController(db, validator)
-	userController := utils.InitializedUserController(db, validator)
-	adminController := utils.InitializedAdminController(db, validator)
-	postController := utils.InitializedPostController(db, validator)
-	commentController := utils.InitializedCommentController(db, validator)
-	categoryController := utils.InitializedCategoryController(db, validator)
+	roleController := utils.InitializedRoleController(db, helpers.Validate)
+	userController := utils.InitializedUserController(db, helpers.Validate)
+	adminController := utils.InitializedAdminController(db, helpers.Validate)
+	postController := utils.InitializedPostController(db, helpers.Validate)
+	commentController := utils.InitializedCommentController(db, helpers.Validate)
+	categoryController := utils.InitializedCategoryController(db, helpers.Validate)
 	followController := utils.InitializedFollowController(db)
 
 	router := routes.Router(&routes.RouterControllers{

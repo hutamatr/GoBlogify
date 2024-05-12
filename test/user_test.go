@@ -11,7 +11,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/hutamatr/GoBlogify/helpers"
 	"github.com/hutamatr/GoBlogify/role"
 	"github.com/hutamatr/GoBlogify/user"
@@ -21,12 +20,11 @@ import (
 
 func createUserTestUser(db *sql.DB) (user.UserResponse, string) {
 	ctx := context.Background()
-	validator := validator.New()
 
 	userRepository := user.NewUserRepository()
 	roleRepository := role.NewRoleRepository()
-	userService := user.NewUserService(userRepository, roleRepository, db, validator)
-	user, accessToken, _ := userService.SignUp(ctx, user.UserCreateRequest{Username: "userTest", Email: "testing@example.com", Password: "Password123!"})
+	userService := user.NewUserService(userRepository, roleRepository, db, helpers.Validate)
+	user, accessToken, _ := userService.SignUp(ctx, user.UserCreateRequest{Username: "userTest", Email: "testing@example.com", Password: "Password123!", Confirm_Password: "Password123!"})
 
 	return user, accessToken
 }
@@ -41,7 +39,8 @@ func TestCreateAccount(t *testing.T) {
 		accountBody := strings.NewReader(`{
 			"username": "userTest",
 			"email": "testing@example.com",
-			"password": "Password123!"
+			"password": "Password123!",
+			"confirm_password": "Password123!"
 		}`)
 
 		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/v1/signup", accountBody)

@@ -11,7 +11,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/hutamatr/GoBlogify/category"
 	"github.com/hutamatr/GoBlogify/helpers"
 	"github.com/hutamatr/GoBlogify/post"
@@ -200,7 +199,6 @@ func TestFindAllPostByFollowed(t *testing.T) {
 
 	t.Run("success find all post by followed", func(t *testing.T) {
 		ctx := context.Background()
-		validator := validator.New()
 		tx, err := db.Begin()
 		helpers.PanicError(err, "failed to begin transaction")
 
@@ -217,8 +215,8 @@ func TestFindAllPostByFollowed(t *testing.T) {
 
 		userRepository := user.NewUserRepository()
 		roleRepository := role.NewRoleRepository()
-		userService := user.NewUserService(userRepository, roleRepository, db, validator)
-		newUser2, accessToken2, _ := userService.SignUp(ctx, user.UserCreateRequest{Username: "userTest2", Email: "testing2@example.com", Password: "Password123!"})
+		userService := user.NewUserService(userRepository, roleRepository, db, helpers.Validate)
+		newUser2, accessToken2, _ := userService.SignUp(ctx, user.UserCreateRequest{Username: "userTest2", Email: "testing2@example.com", Password: "Password123!", Confirm_Password: "Password123!"})
 
 		followUser := createFollowTest(db, newUser2.Id, newUser1.Id)
 

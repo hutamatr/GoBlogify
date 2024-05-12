@@ -4,13 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/hutamatr/GoBlogify/admin"
 	"github.com/hutamatr/GoBlogify/helpers"
 	"github.com/hutamatr/GoBlogify/role"
@@ -21,17 +21,15 @@ import (
 func createAdminTestAdmin(db *sql.DB) (admin.AdminResponse, string) {
 	env := helpers.NewEnv()
 	adminCode := env.Auth.AdminCode
-
 	ctx := context.Background()
 	tx, err := db.Begin()
-	validator := validator.New()
 	helpers.PanicError(err, "failed to begin transaction")
 	defer tx.Commit()
 
 	userRepository := user.NewUserRepository()
 	roleRepository := role.NewRoleRepository()
-	userService := admin.NewAdminService(userRepository, roleRepository, db, validator)
-	admin, accessToken, _ := userService.SignUpAdmin(ctx, admin.AdminCreateRequest{Username: "admin", Email: "admin@example.com", Password: "Admin123!", Admin_Code: adminCode})
+	userService := admin.NewAdminService(userRepository, roleRepository, db, helpers.Validate)
+	admin, accessToken, _ := userService.SignUpAdmin(ctx, admin.AdminCreateRequest{Username: "admin", Email: "admin@example.com", Password: "Admin123!", Admin_Code: adminCode, Confirm_Password: "Admin123!"})
 
 	return admin, accessToken
 }
@@ -50,6 +48,7 @@ func TestCreateAdminAccount(t *testing.T) {
 			"username": "admin",
 			"email": "admin@example.com",
 			"password": "Admin123!",
+			"confirm_password": "Admin123!",
 			"admin_code": "` + adminCode + `"
 		}`)
 
@@ -117,6 +116,9 @@ func TestLoginAdmin(t *testing.T) {
 	defer db.Close()
 
 	admin, _ := createAdminTestAdmin(db)
+	fmt.Println("running")
+
+	fmt.Println("admin", admin)
 
 	t.Run("success login admin", func(t *testing.T) {
 		accountBody := strings.NewReader(`{

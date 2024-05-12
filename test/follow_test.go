@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/hutamatr/GoBlogify/follow"
 	"github.com/hutamatr/GoBlogify/helpers"
 	"github.com/hutamatr/GoBlogify/role"
@@ -43,12 +42,11 @@ func TestFollowUser(t *testing.T) {
 
 	t.Run("success following user", func(t *testing.T) {
 		ctx := context.Background()
-		validator := validator.New()
 
 		userRepository := user.NewUserRepository()
 		roleRepository := role.NewRoleRepository()
-		userService := user.NewUserService(userRepository, roleRepository, db, validator)
-		newUser2, _, _ := userService.SignUp(ctx, user.UserCreateRequest{Username: "userTest2", Email: "testing2@example.com", Password: "Password123!"})
+		userService := user.NewUserService(userRepository, roleRepository, db, helpers.Validate)
+		newUser2, _, _ := userService.SignUp(ctx, user.UserCreateRequest{Username: "userTest2", Email: "testing2@example.com", Password: "Password123!", Confirm_Password: "Password123!"})
 
 		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/v1/users/"+strconv.Itoa(newUser1.Id)+"/follow/"+strconv.Itoa(newUser2.Id), nil)
 		request.Header.Add("Content-Type", "application/json")
@@ -110,12 +108,11 @@ func TestUnfollowUser(t *testing.T) {
 
 	t.Run("success unfollow user", func(t *testing.T) {
 		ctx := context.Background()
-		validator := validator.New()
 
 		userRepository := user.NewUserRepository()
 		roleRepository := role.NewRoleRepository()
-		userService := user.NewUserService(userRepository, roleRepository, db, validator)
-		newUser2, _, _ := userService.SignUp(ctx, user.UserCreateRequest{Username: "userTest2", Email: "testing2@example.com", Password: "Password123!"})
+		userService := user.NewUserService(userRepository, roleRepository, db, helpers.Validate)
+		newUser2, _, _ := userService.SignUp(ctx, user.UserCreateRequest{Username: "userTest2", Email: "testing2@example.com", Password: "Password123!", Confirm_Password: "Password123!"})
 
 		followRepository := follow.NewFollowRepository()
 		followService := follow.NewFollowService(followRepository, db)
@@ -183,12 +180,11 @@ func TestFindAllFollowerByUser(t *testing.T) {
 
 	t.Run("success find all follower", func(t *testing.T) {
 		ctx := context.Background()
-		validator := validator.New()
 
 		userRepository := user.NewUserRepository()
 		roleRepository := role.NewRoleRepository()
-		userService := user.NewUserService(userRepository, roleRepository, db, validator)
-		newUser2, _, _ := userService.SignUp(ctx, user.UserCreateRequest{Username: "userTest2", Email: "testing2@example.com", Password: "Password123!"})
+		userService := user.NewUserService(userRepository, roleRepository, db, helpers.Validate)
+		newUser2, _, _ := userService.SignUp(ctx, user.UserCreateRequest{Username: "userTest2", Email: "testing2@example.com", Password: "Password123!", Confirm_Password: "Password123!"})
 
 		followRepository := follow.NewFollowRepository()
 		followService := follow.NewFollowService(followRepository, db)
@@ -257,12 +253,11 @@ func TestFindAllFollowedByUser(t *testing.T) {
 
 	t.Run("success find all followed", func(t *testing.T) {
 		ctx := context.Background()
-		validator := validator.New()
 
 		userRepository := user.NewUserRepository()
 		roleRepository := role.NewRoleRepository()
-		userService := user.NewUserService(userRepository, roleRepository, db, validator)
-		newUser2, _, _ := userService.SignUp(ctx, user.UserCreateRequest{Username: "userTest2", Email: "testing2@example.com", Password: "Password123!"})
+		userService := user.NewUserService(userRepository, roleRepository, db, helpers.Validate)
+		newUser2, _, _ := userService.SignUp(ctx, user.UserCreateRequest{Username: "userTest2", Email: "testing2@example.com", Password: "Password123!", Confirm_Password: "Password123!"})
 
 		followRepository := follow.NewFollowRepository()
 		followService := follow.NewFollowService(followRepository, db)
@@ -297,12 +292,11 @@ func TestFindAllFollowedByUser(t *testing.T) {
 
 	t.Run("not found find all followed", func(t *testing.T) {
 		ctx := context.Background()
-		validator := validator.New()
 
 		userRepository := user.NewUserRepository()
 		roleRepository := role.NewRoleRepository()
-		userService := user.NewUserService(userRepository, roleRepository, db, validator)
-		newUser3, _, _ := userService.SignUp(ctx, user.UserCreateRequest{Username: "userTest3", Email: "testing3@example.com", Password: "Password123!"})
+		userService := user.NewUserService(userRepository, roleRepository, db, helpers.Validate)
+		newUser3, _, _ := userService.SignUp(ctx, user.UserCreateRequest{Username: "userTest3", Email: "testing3@example.com", Password: "Password123!", Confirm_Password: "Password123!"})
 
 		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/v1/users/"+strconv.Itoa(newUser3.Id)+"/following", nil)
 		request.Header.Add("Content-Type", "application/json")
