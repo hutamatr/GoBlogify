@@ -1,0 +1,6 @@
+{
+  "go.buildFlags": [
+    "-tags=wireinject",
+    "-tags=!wireinject",
+  ],
+}

@@ -10,10 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hutamatr/go-blog-api/helpers"
-	"github.com/hutamatr/go-blog-api/model/domain"
-	"github.com/hutamatr/go-blog-api/model/web"
-	repositories "github.com/hutamatr/go-blog-api/repositories/categories"
+	"github.com/hutamatr/GoBlogify/category"
+	"github.com/hutamatr/GoBlogify/helpers"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,13 +21,16 @@ func TestCreateCategory(t *testing.T) {
 	router := SetupRouterTest(db)
 	defer db.Close()
 
+	_, accessToken := createAdminTestAdmin(db)
+
 	t.Run("success create category", func(t *testing.T) {
 		categoryBody := strings.NewReader(`{
 			"name": "category-1"
 		}`)
 
-		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/category", categoryBody)
+		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/v1/categories", categoryBody)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -37,15 +38,15 @@ func TestCreateCategory(t *testing.T) {
 
 		response := recorder.Result()
 
-		assert.Equal(t, http.StatusOK, response.StatusCode)
+		assert.Equal(t, http.StatusCreated, response.StatusCode)
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusCreated, responseBody.Code)
 		assert.Equal(t, "CREATED", responseBody.Status)
@@ -56,8 +57,9 @@ func TestCreateCategory(t *testing.T) {
 		categoryBody := strings.NewReader(`{
 			"name": ""
 		}`)
-		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/category", categoryBody)
+		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/v1/categories", categoryBody)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -69,14 +71,14 @@ func TestCreateCategory(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ErrorResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusBadRequest, responseBody.Code)
-		assert.Equal(t, "Bad Request", responseBody.Status)
+		assert.Equal(t, "BAD REQUEST", responseBody.Status)
 	})
 }
 
@@ -86,19 +88,22 @@ func TestFindAllCategory(t *testing.T) {
 	router := SetupRouterTest(db)
 	defer db.Close()
 
+	_, accessToken := createUserTestUser(db)
+
 	t.Run("success find all category", func(t *testing.T) {
 		ctx := context.Background()
 		tx, err := db.Begin()
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to begin transaction")
 
-		categoryRepository := repositories.NewCategoryRepository()
-		category1 := categoryRepository.Save(ctx, tx, domain.Category{Name: "category-3"})
-		category2 := categoryRepository.Save(ctx, tx, domain.Category{Name: "category-4"})
+		categoryRepository := category.NewCategoryRepository()
+		category1 := categoryRepository.Save(ctx, tx, category.Category{Name: "category-3"})
+		category2 := categoryRepository.Save(ctx, tx, category.Category{Name: "category-4"})
 
 		tx.Commit()
 
-		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/category", nil)
+		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/v1/categories", nil)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -110,89 +115,24 @@ func TestFindAllCategory(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusOK, responseBody.Code)
 		assert.Equal(t, "OK", responseBody.Status)
-		assert.Equal(t, category1.Name, responseBody.Data.([]interface{})[0].(map[string]interface{})["name"])
-		assert.Equal(t, category2.Name, responseBody.Data.([]interface{})[1].(map[string]interface{})["name"])
+		assert.Equal(t, category1.Name, responseBody.Data.(map[string]interface{})["categories"].([]interface{})[0].(map[string]interface{})["name"])
+		assert.Equal(t, category2.Name, responseBody.Data.(map[string]interface{})["categories"].([]interface{})[1].(map[string]interface{})["name"])
 	})
 
 	t.Run("empty find all category", func(t *testing.T) {
 		DeleteDBTest(db)
 
-		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/category", nil)
+		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/v1/categories", nil)
 		request.Header.Add("Content-Type", "application/json")
-
-		recorder := httptest.NewRecorder()
-
-		router.ServeHTTP(recorder, request)
-
-		response := recorder.Result()
-
-		assert.Equal(t, http.StatusOK, response.StatusCode)
-
-		body, err := io.ReadAll(response.Body)
-
-		var responseBody web.ResponseJSON
-
-		json.Unmarshal(body, &responseBody)
-
-		helpers.PanicError(err)
-
-		assert.Equal(t, http.StatusOK, responseBody.Code)
-		assert.Equal(t, "OK", responseBody.Status)
-		assert.Nil(t, responseBody.Data)
-	})
-}
-
-func TestFindByIdCategory(t *testing.T) {
-	db := ConnectDBTest()
-	DeleteDBTest(db)
-	router := SetupRouterTest(db)
-	defer db.Close()
-
-	t.Run("success find by id category", func(t *testing.T) {
-		ctx := context.Background()
-		tx, err := db.Begin()
-		helpers.PanicError(err)
-
-		categoryRepository := repositories.NewCategoryRepository()
-		category := categoryRepository.Save(ctx, tx, domain.Category{Name: "category-5"})
-
-		tx.Commit()
-
-		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/category/"+strconv.Itoa(category.Id), nil)
-		request.Header.Add("Content-Type", "application/json")
-
-		recorder := httptest.NewRecorder()
-
-		router.ServeHTTP(recorder, request)
-
-		response := recorder.Result()
-
-		assert.Equal(t, http.StatusOK, response.StatusCode)
-
-		body, err := io.ReadAll(response.Body)
-
-		var responseBody web.ResponseJSON
-
-		json.Unmarshal(body, &responseBody)
-
-		helpers.PanicError(err)
-
-		assert.Equal(t, http.StatusOK, responseBody.Code)
-		assert.Equal(t, "OK", responseBody.Status)
-		assert.Equal(t, category.Name, responseBody.Data.(map[string]interface{})["name"])
-	})
-
-	t.Run("not found find by id category", func(t *testing.T) {
-		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/category/1", nil)
-		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -204,40 +144,38 @@ func TestFindByIdCategory(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ErrorResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusNotFound, responseBody.Code)
-		assert.Equal(t, "Not Found", responseBody.Status)
-		assert.Equal(t, "category not found", responseBody.Data)
+		assert.Equal(t, "NOT FOUND", responseBody.Status)
 	})
 }
 
-func TestUpdateCategory(t *testing.T) {
+func TestFindByIdCategory(t *testing.T) {
 	db := ConnectDBTest()
 	DeleteDBTest(db)
 	router := SetupRouterTest(db)
 	defer db.Close()
 
-	t.Run("success update category", func(t *testing.T) {
+	_, accessToken := createUserTestUser(db)
+
+	t.Run("success find by id category", func(t *testing.T) {
 		ctx := context.Background()
 		tx, err := db.Begin()
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to begin transaction")
 
-		categoryRepository := repositories.NewCategoryRepository()
-		category := categoryRepository.Save(ctx, tx, domain.Category{Name: "category-5"})
+		categoryRepository := category.NewCategoryRepository()
+		category := categoryRepository.Save(ctx, tx, category.Category{Name: "category-5"})
 
 		tx.Commit()
 
-		categoryBody := strings.NewReader(`{
-			"name": "category-6"
-		}`)
-
-		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/category/"+strconv.Itoa(category.Id), categoryBody)
+		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/v1/categories/"+strconv.Itoa(category.Id), nil)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -249,11 +187,85 @@ func TestUpdateCategory(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
+
+		assert.Equal(t, http.StatusOK, responseBody.Code)
+		assert.Equal(t, "OK", responseBody.Status)
+		assert.Equal(t, category.Name, responseBody.Data.(map[string]interface{})["name"])
+	})
+
+	t.Run("not found find by id category", func(t *testing.T) {
+		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/v1/categories/1", nil)
+		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
+
+		recorder := httptest.NewRecorder()
+
+		router.ServeHTTP(recorder, request)
+
+		response := recorder.Result()
+
+		assert.Equal(t, http.StatusNotFound, response.StatusCode)
+
+		body, err := io.ReadAll(response.Body)
+
+		var responseBody helpers.ErrorResponseJSON
+
+		json.Unmarshal(body, &responseBody)
+
+		helpers.PanicError(err, "failed to read response body")
+
+		assert.Equal(t, http.StatusNotFound, responseBody.Code)
+		assert.Equal(t, "NOT FOUND", responseBody.Status)
+		assert.Equal(t, "category not found", responseBody.Error)
+	})
+}
+
+func TestUpdateCategory(t *testing.T) {
+	db := ConnectDBTest()
+	DeleteDBTest(db)
+	router := SetupRouterTest(db)
+	defer db.Close()
+
+	_, accessToken := createAdminTestAdmin(db)
+
+	t.Run("success update category", func(t *testing.T) {
+		ctx := context.Background()
+		tx, err := db.Begin()
+		helpers.PanicError(err, "failed to begin transaction")
+
+		categoryRepository := category.NewCategoryRepository()
+		category := categoryRepository.Save(ctx, tx, category.Category{Name: "category-5"})
+
+		tx.Commit()
+
+		categoryBody := strings.NewReader(`{
+			"name": "category-6"
+		}`)
+
+		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/v1/categories/"+strconv.Itoa(category.Id), categoryBody)
+		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
+
+		recorder := httptest.NewRecorder()
+
+		router.ServeHTTP(recorder, request)
+
+		response := recorder.Result()
+
+		assert.Equal(t, http.StatusOK, response.StatusCode)
+
+		body, err := io.ReadAll(response.Body)
+
+		var responseBody helpers.ResponseJSON
+
+		json.Unmarshal(body, &responseBody)
+
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusOK, responseBody.Code)
 		assert.Equal(t, "UPDATED", responseBody.Status)
@@ -266,8 +278,9 @@ func TestUpdateCategory(t *testing.T) {
 			"name": "category-6"
 		}`)
 
-		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/category/1", categoryBody)
+		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/v1/categories/1", categoryBody)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -279,24 +292,24 @@ func TestUpdateCategory(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ErrorResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusNotFound, responseBody.Code)
-		assert.Equal(t, "Not Found", responseBody.Status)
-		assert.Equal(t, "category not found", responseBody.Data)
+		assert.Equal(t, "NOT FOUND", responseBody.Status)
+		assert.Equal(t, "category not found", responseBody.Error)
 	})
 
 	t.Run("bad request update category", func(t *testing.T) {
 		ctx := context.Background()
 		tx, err := db.Begin()
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to begin transaction")
 
-		categoryRepository := repositories.NewCategoryRepository()
-		category := categoryRepository.Save(ctx, tx, domain.Category{Name: "category-5"})
+		categoryRepository := category.NewCategoryRepository()
+		category := categoryRepository.Save(ctx, tx, category.Category{Name: "category-5"})
 
 		tx.Commit()
 
@@ -304,8 +317,9 @@ func TestUpdateCategory(t *testing.T) {
 			"name": ""
 		}`)
 
-		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/category/"+strconv.Itoa(category.Id), categoryBody)
+		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/v1/categories/"+strconv.Itoa(category.Id), categoryBody)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -317,15 +331,15 @@ func TestUpdateCategory(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ErrorResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusBadRequest, responseBody.Code)
-		assert.Equal(t, "Bad Request", responseBody.Status)
-		assert.Equal(t, "Key: 'CategoryUpdateRequest.Name' Error:Field validation for 'Name' failed on the 'required' tag", responseBody.Data)
+		assert.Equal(t, "BAD REQUEST", responseBody.Status)
+		assert.Equal(t, "Key: 'CategoryUpdateRequest.Name' Error:Field validation for 'Name' failed on the 'required' tag", responseBody.Error)
 	})
 
 }
@@ -336,18 +350,21 @@ func TestDeleteCategory(t *testing.T) {
 	router := SetupRouterTest(db)
 	defer db.Close()
 
+	_, accessToken := createAdminTestAdmin(db)
+
 	t.Run("success delete category", func(t *testing.T) {
 		ctx := context.Background()
 		tx, err := db.Begin()
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to begin transaction")
 
-		categoryRepository := repositories.NewCategoryRepository()
-		category := categoryRepository.Save(ctx, tx, domain.Category{Name: "category-3"})
+		categoryRepository := category.NewCategoryRepository()
+		category := categoryRepository.Save(ctx, tx, category.Category{Name: "category-3"})
 
 		tx.Commit()
 
-		request := httptest.NewRequest(http.MethodDelete, "http://localhost:8080/api/category/"+strconv.Itoa(category.Id), nil)
+		request := httptest.NewRequest(http.MethodDelete, "http://localhost:8080/api/v1/categories/"+strconv.Itoa(category.Id), nil)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -359,19 +376,20 @@ func TestDeleteCategory(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusOK, responseBody.Code)
 		assert.Equal(t, "DELETED", responseBody.Status)
 	})
 
 	t.Run("not found delete category", func(t *testing.T) {
-		request := httptest.NewRequest(http.MethodDelete, "http://localhost:8080/api/category/1", nil)
+		request := httptest.NewRequest(http.MethodDelete, "http://localhost:8080/api/v1/categories/1", nil)
 		request.Header.Add("Content-Type", "application/json")
+		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
 
@@ -383,13 +401,13 @@ func TestDeleteCategory(t *testing.T) {
 
 		body, err := io.ReadAll(response.Body)
 
-		var responseBody web.ResponseJSON
+		var responseBody helpers.ErrorResponseJSON
 
 		json.Unmarshal(body, &responseBody)
 
-		helpers.PanicError(err)
+		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusNotFound, responseBody.Code)
-		assert.Equal(t, "Not Found", responseBody.Status)
+		assert.Equal(t, "NOT FOUND", responseBody.Status)
 	})
 }

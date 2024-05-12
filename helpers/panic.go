@@ -1,10 +1,8 @@
 package helpers
 
-import "log"
-
-func PanicError(err error) {
+func PanicError(err error, msg string) {
 	if err != nil {
-		log.Printf("An error occurred: %v", err)
+		LogError("%v : %s", err.Error(), msg)
 		panic(err)
 	}
 }
