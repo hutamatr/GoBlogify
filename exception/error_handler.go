@@ -8,13 +8,13 @@ import (
 )
 
 func ErrorHandler(writer http.ResponseWriter, request *http.Request, err interface{}) {
+	if validationError(writer, request, err) {
+		return
+	}
 	if badRequestError(writer, request, err) {
 		return
 	}
 	if notFoundError(writer, request, err) {
-		return
-	}
-	if validationError(writer, request, err) {
 		return
 	}
 	internalServerError(writer, request, err)
@@ -27,9 +27,10 @@ func badRequestError(writer http.ResponseWriter, _ *http.Request, err interface{
 		writer.WriteHeader(http.StatusBadRequest)
 
 		webResponseError := helpers.ErrorResponseJSON{
-			Code:   http.StatusBadRequest,
-			Status: "BAD REQUEST",
-			Error:  exception.Error,
+			Code:    http.StatusBadRequest,
+			Status:  "BAD REQUEST",
+			Error:   exception.Error,
+			Message: "Request is not valid",
 		}
 
 		helpers.EncodeJSONFromResponse(writer, webResponseError)
@@ -45,9 +46,10 @@ func validationError(writer http.ResponseWriter, _ *http.Request, err interface{
 		writer.WriteHeader(http.StatusBadRequest)
 
 		ErrResponse := helpers.ErrorResponseJSON{
-			Code:   http.StatusBadRequest,
-			Status: "BAD REQUEST",
-			Error:  validationError.Error(),
+			Code:    http.StatusBadRequest,
+			Status:  "BAD REQUEST",
+			Error:   validationError.Error(),
+			Message: "Request is not valid",
 		}
 
 		helpers.EncodeJSONFromResponse(writer, ErrResponse)
@@ -63,9 +65,10 @@ func notFoundError(writer http.ResponseWriter, _ *http.Request, err interface{})
 		writer.WriteHeader(http.StatusNotFound)
 
 		ErrResponse := helpers.ErrorResponseJSON{
-			Code:   http.StatusNotFound,
-			Status: "NOT FOUND",
-			Error:  notFoundErr.Error,
+			Code:    http.StatusNotFound,
+			Status:  "NOT FOUND",
+			Error:   notFoundErr.Error,
+			Message: "Resource not found",
 		}
 
 		helpers.EncodeJSONFromResponse(writer, ErrResponse)
@@ -80,9 +83,10 @@ func internalServerError(writer http.ResponseWriter, _ *http.Request, err interf
 	writer.WriteHeader(http.StatusInternalServerError)
 
 	ErrResponse := helpers.ErrorResponseJSON{
-		Code:   http.StatusInternalServerError,
-		Status: "INTERNAL SERVER ERROR",
-		Error:  err,
+		Code:    http.StatusInternalServerError,
+		Status:  "INTERNAL SERVER ERROR",
+		Error:   err,
+		Message: "Something went wrong",
 	}
 
 	helpers.EncodeJSONFromResponse(writer, ErrResponse)

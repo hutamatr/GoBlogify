@@ -47,9 +47,10 @@ func (middleware *AuthMiddleware) ServeHTTP(writer http.ResponseWriter, request 
 		writer.WriteHeader(http.StatusUnauthorized)
 
 		ErrResponse := helpers.ErrorResponseJSON{
-			Code:   http.StatusUnauthorized,
-			Status: "Unauthorized",
-			Error:  "token is required",
+			Code:    http.StatusUnauthorized,
+			Status:  "Unauthorized",
+			Error:   "token is required",
+			Message: "token is required, please login first",
 		}
 
 		helpers.EncodeJSONFromResponse(writer, ErrResponse)
@@ -63,9 +64,10 @@ func (middleware *AuthMiddleware) ServeHTTP(writer http.ResponseWriter, request 
 		writer.WriteHeader(http.StatusUnauthorized)
 
 		ErrResponse := helpers.ErrorResponseJSON{
-			Code:   http.StatusUnauthorized,
-			Status: "Unauthorized",
-			Error:  err.Error(),
+			Code:    http.StatusUnauthorized,
+			Status:  "Unauthorized",
+			Error:   err.Error(),
+			Message: "token is invalid, please login first",
 		}
 
 		helpers.EncodeJSONFromResponse(writer, ErrResponse)
