@@ -1,10 +1,12 @@
-CREATE TABLE IF NOT EXISTS follow(
+CREATE TABLE IF NOT EXISTS follows (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
   follower_id INT UNSIGNED NOT NULL,
   followed_id INT UNSIGNED NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (follower_id) REFERENCES user(id),
-  FOREIGN KEY (followed_id) REFERENCES user(id),
-  UNIQUE (follower_id, followed_id)
+  FOREIGN KEY (follower_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (followed_id) REFERENCES users(id) ON DELETE CASCADE,
+  UNIQUE (follower_id, followed_id),
+  INDEX (follower_id),
+  INDEX (followed_id)
 ) ENGINE=InnoDB;
