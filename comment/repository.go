@@ -25,9 +25,9 @@ func NewCommentRepository() CommentRepository {
 }
 
 func (repository *CommentRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, comment Comment) CommentJoin {
-	queryInsert := "INSERT INTO comment(post_id, user_id, content) VALUES(?, ?, ?)"
+	queryInsert := "INSERT INTO comments(post_id, user_id, comment) VALUES(?, ?, ?)"
 
-	result, err := tx.ExecContext(ctx, queryInsert, comment.Post_Id, comment.User_Id, comment.Content)
+	result, err := tx.ExecContext(ctx, queryInsert, comment.Post_Id, comment.User_Id, comment.Comment)
 
 	helpers.PanicError(err, "failed to exec query insert comment")
 
@@ -41,9 +41,9 @@ func (repository *CommentRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, c
 }
 
 func (repository *CommentRepositoryImpl) FindCommentsByPost(ctx context.Context, tx *sql.Tx, postId, limit, offset int) []CommentJoin {
-	query := `SELECT c.id, c.content, c.post_id, c.user_id, c.created_at, c.updated_at, u.id, u.username, u.email 
-	FROM user u 
-	JOIN comment c 
+	query := `SELECT c.id, c.comment, c.post_id, c.user_id, c.created_at, c.updated_at, u.id, u.username, u.email 
+	FROM users u 
+	JOIN comments c 
 	ON u.id = c.user_id 
 	WHERE c.post_id = ? LIMIT ? OFFSET ?`
 
@@ -57,7 +57,7 @@ func (repository *CommentRepositoryImpl) FindCommentsByPost(ctx context.Context,
 
 	for rows.Next() {
 		var comment CommentJoin
-		err := rows.Scan(&comment.Id, &comment.Content, &comment.Post_Id, &comment.User_Id, &comment.Created_At, &comment.Updated_At, &comment.User.Id, &comment.User.Username, &comment.User.Email)
+		err := rows.Scan(&comment.Id, &comment.Comment, &comment.Post_Id, &comment.User_Id, &comment.Created_At, &comment.Updated_At, &comment.User.Id, &comment.User.Username, &comment.User.Email)
 		helpers.PanicError(err, "failed to scan comments by post")
 
 		comments = append(comments, comment)
@@ -67,7 +67,7 @@ func (repository *CommentRepositoryImpl) FindCommentsByPost(ctx context.Context,
 }
 
 func (repository *CommentRepositoryImpl) FindById(ctx context.Context, tx *sql.Tx, commentId int) CommentJoin {
-	query := "SELECT c.id, c.content, c.post_id, c.user_id, c.created_at, c.updated_at, u.id, u.username, u.email FROM user u JOIN comment c ON u.id = c.user_id WHERE c.id = ?"
+	query := "SELECT c.id, c.comment, c.post_id, c.user_id, c.created_at, c.updated_at, u.id, u.username, u.email FROM users u JOIN comments c ON u.id = c.user_id WHERE c.id = ?"
 
 	rows, err := tx.QueryContext(ctx, query, commentId)
 
@@ -78,7 +78,7 @@ func (repository *CommentRepositoryImpl) FindById(ctx context.Context, tx *sql.T
 	var comment CommentJoin
 
 	if rows.Next() {
-		err := rows.Scan(&comment.Id, &comment.Content, &comment.Post_Id, &comment.User_Id, &comment.Created_At, &comment.Updated_At, &comment.User.Id, &comment.User.Username, &comment.User.Email)
+		err := rows.Scan(&comment.Id, &comment.Comment, &comment.Post_Id, &comment.User_Id, &comment.Created_At, &comment.Updated_At, &comment.User.Id, &comment.User.Username, &comment.User.Email)
 
 		helpers.PanicError(err, "failed to scan comment by id")
 	} else {
@@ -89,9 +89,9 @@ func (repository *CommentRepositoryImpl) FindById(ctx context.Context, tx *sql.T
 }
 
 func (repository *CommentRepositoryImpl) Update(ctx context.Context, tx *sql.Tx, comment Comment) CommentJoin {
-	query := "UPDATE comment SET content = ? WHERE id = ?"
+	query := "UPDATE comments SET comment = ? WHERE id = ?"
 
-	_, err := tx.ExecContext(ctx, query, comment.Content, comment.Id)
+	_, err := tx.ExecContext(ctx, query, comment.Comment, comment.Id)
 
 	helpers.PanicError(err, "failed to exec query update comment")
 
@@ -101,7 +101,7 @@ func (repository *CommentRepositoryImpl) Update(ctx context.Context, tx *sql.Tx,
 }
 
 func (repository *CommentRepositoryImpl) Delete(ctx context.Context, tx *sql.Tx, commentId int) {
-	query := "DELETE FROM comment WHERE id = ?"
+	query := "DELETE FROM comments WHERE id = ?"
 
 	result, err := tx.ExecContext(ctx, query, commentId)
 
@@ -117,7 +117,7 @@ func (repository *CommentRepositoryImpl) Delete(ctx context.Context, tx *sql.Tx,
 }
 
 func (repository *CommentRepositoryImpl) CountCommentsByPost(ctx context.Context, tx *sql.Tx, postId int) int {
-	query := "SELECT COUNT(*) FROM comment WHERE post_id = ?"
+	query := "SELECT COUNT(*) FROM comments WHERE post_id = ?"
 
 	rows, err := tx.QueryContext(ctx, query, postId)
 

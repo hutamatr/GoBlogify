@@ -80,7 +80,7 @@ func (middleware *AuthMiddleware) ServeHTTP(writer http.ResponseWriter, request 
 	db := database.ConnectDB()
 	defer db.Close()
 
-	queryUserRole := "SELECT role_id FROM user WHERE id = ?"
+	queryUserRole := "SELECT role_id FROM users WHERE id = ?"
 	rows, err := db.Query(queryUserRole, id)
 	helpers.PanicError(err, "failed to query user role")
 
@@ -92,7 +92,7 @@ func (middleware *AuthMiddleware) ServeHTTP(writer http.ResponseWriter, request 
 		helpers.PanicError(err, "failed to scan user role")
 	}
 
-	queryRole := "SELECT id FROM role WHERE name = ?"
+	queryRole := "SELECT id FROM roles WHERE name = ?"
 	rows2, err := db.Query(queryRole, "admin")
 	helpers.PanicError(err, "failed to query role")
 

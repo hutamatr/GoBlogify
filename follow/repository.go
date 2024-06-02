@@ -26,7 +26,7 @@ func NewFollowRepository() FollowRepositories {
 }
 
 func (repository *FollowRepositoriesImpl) Save(ctx context.Context, tx *sql.Tx, follow Follow) Follow {
-	queryInsert := "INSERT INTO follow(follower_id, followed_id) VALUES(?, ?)"
+	queryInsert := "INSERT INTO follows(follower_id, followed_id) VALUES(?, ?)"
 
 	result, err := tx.ExecContext(ctx, queryInsert, follow.Follower_Id, follow.Followed_Id)
 
@@ -43,8 +43,8 @@ func (repository *FollowRepositoriesImpl) Save(ctx context.Context, tx *sql.Tx, 
 
 func (repository *FollowRepositoriesImpl) FindAllFollowerByUser(ctx context.Context, tx *sql.Tx, followedId, limit, offset int) []FollowJoin {
 	query := `SELECT u.id, u.username, u.first_name, u.last_name, f.id, f.followed_id, f.follower_id, f.created_at, f.updated_at 
-	FROM user u 
-	JOIN follow f 
+	FROM users u 
+	JOIN follows f 
 	ON u.id = f.follower_id 
 	WHERE f.followed_id = ? LIMIT ? OFFSET ?`
 
@@ -83,8 +83,8 @@ func (repository *FollowRepositoriesImpl) FindAllFollowerByUser(ctx context.Cont
 
 func (repository *FollowRepositoriesImpl) FindAllFollowedByUser(ctx context.Context, tx *sql.Tx, followerId, limit, offset int) []FollowJoin {
 	query := `SELECT u.id, u.username, u.first_name, u.last_name, f.id, f.followed_id, f.follower_id, f.created_at, f.updated_at 
-	FROM user u 
-	JOIN follow f 
+	FROM users u 
+	JOIN follows f 
 	ON u.id = f.followed_id 
 	WHERE f.follower_id = ? LIMIT ? OFFSET ?`
 
@@ -122,7 +122,7 @@ func (repository *FollowRepositoriesImpl) FindAllFollowedByUser(ctx context.Cont
 }
 
 func (repository *FollowRepositoriesImpl) FindById(ctx context.Context, tx *sql.Tx, followId int) Follow {
-	query := "SELECT id, follower_id, followed_id, created_at, updated_at FROM follow WHERE id = ?"
+	query := "SELECT id, follower_id, followed_id, created_at, updated_at FROM follows WHERE id = ?"
 
 	rows, err := tx.QueryContext(ctx, query, followId)
 
@@ -141,7 +141,7 @@ func (repository *FollowRepositoriesImpl) FindById(ctx context.Context, tx *sql.
 }
 
 func (repository *FollowRepositoriesImpl) Delete(ctx context.Context, tx *sql.Tx, followerId, followedId int) {
-	query := "DELETE FROM follow WHERE follower_id = ? AND followed_id = ?"
+	query := "DELETE FROM follows WHERE follower_id = ? AND followed_id = ?"
 
 	result, err := tx.ExecContext(ctx, query, followerId, followedId)
 	helpers.PanicError(err, "failed to exec query delete follow")
@@ -155,7 +155,7 @@ func (repository *FollowRepositoriesImpl) Delete(ctx context.Context, tx *sql.Tx
 }
 
 func (repository *FollowRepositoriesImpl) CountFollower(ctx context.Context, tx *sql.Tx, followedId int) int {
-	query := "SELECT COUNT(*) FROM follow WHERE followed_id = ?"
+	query := "SELECT COUNT(*) FROM follows WHERE followed_id = ?"
 
 	rows, err := tx.QueryContext(ctx, query, followedId)
 	helpers.PanicError(err, "failed to exec query count follower")
@@ -173,7 +173,7 @@ func (repository *FollowRepositoriesImpl) CountFollower(ctx context.Context, tx 
 }
 
 func (repository *FollowRepositoriesImpl) CountFollowed(ctx context.Context, tx *sql.Tx, followerId int) int {
-	query := "SELECT COUNT(*) FROM follow WHERE follower_id = ?"
+	query := "SELECT COUNT(*) FROM follows WHERE follower_id = ?"
 
 	rows, err := tx.QueryContext(ctx, query, followerId)
 	helpers.PanicError(err, "failed to exec query count followed")

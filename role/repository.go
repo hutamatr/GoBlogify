@@ -25,7 +25,7 @@ func NewRoleRepository() RoleRepository {
 }
 
 func (repository *RoleRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, role Role) Role {
-	query := "INSERT INTO role(name) VALUES (?)"
+	query := "INSERT INTO roles(name) VALUES (?)"
 
 	result, err := tx.ExecContext(ctx, query, role.Name)
 
@@ -41,7 +41,7 @@ func (repository *RoleRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, role
 }
 
 func (repository *RoleRepositoryImpl) FindAll(ctx context.Context, tx *sql.Tx) []Role {
-	query := "SELECT id, name, created_at, updated_at FROM role"
+	query := "SELECT id, name, created_at, updated_at FROM roles"
 
 	rows, err := tx.QueryContext(ctx, query)
 
@@ -63,7 +63,7 @@ func (repository *RoleRepositoryImpl) FindAll(ctx context.Context, tx *sql.Tx) [
 }
 
 func (repository *RoleRepositoryImpl) FindById(ctx context.Context, tx *sql.Tx, roleId int) Role {
-	query := "SELECT id, name, created_at, updated_at FROM role WHERE id = ?"
+	query := "SELECT id, name, created_at, updated_at FROM roles WHERE id = ?"
 
 	rows, err := tx.QueryContext(ctx, query, roleId)
 
@@ -84,7 +84,7 @@ func (repository *RoleRepositoryImpl) FindById(ctx context.Context, tx *sql.Tx, 
 }
 
 func (repository *RoleRepositoryImpl) FindByName(ctx context.Context, tx *sql.Tx, roleName string) Role {
-	query := "SELECT id, name, created_at, updated_at FROM role WHERE name = ?"
+	query := "SELECT id, name, created_at, updated_at FROM roles WHERE name = ?"
 
 	rows, err := tx.QueryContext(ctx, query, roleName)
 
@@ -102,7 +102,7 @@ func (repository *RoleRepositoryImpl) FindByName(ctx context.Context, tx *sql.Tx
 }
 
 func (repository *RoleRepositoryImpl) Update(ctx context.Context, tx *sql.Tx, role Role) Role {
-	query := "UPDATE role SET name = ? WHERE id = ?"
+	query := "UPDATE roles SET name = ? WHERE id = ?"
 
 	_, err := tx.ExecContext(ctx, query, role.Name, role.Id)
 
@@ -114,7 +114,7 @@ func (repository *RoleRepositoryImpl) Update(ctx context.Context, tx *sql.Tx, ro
 }
 
 func (repository *RoleRepositoryImpl) Delete(ctx context.Context, tx *sql.Tx, roleId int) {
-	query := "DELETE FROM role WHERE id = ?"
+	query := "DELETE FROM roles WHERE id = ?"
 
 	result, err := tx.ExecContext(ctx, query, roleId)
 
