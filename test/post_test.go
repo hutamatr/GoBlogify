@@ -1,23 +1,30 @@
 package test
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"encoding/json"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
-	"strings"
 	"testing"
+
+	_ "embed"
 
 	"github.com/hutamatr/GoBlogify/category"
 	"github.com/hutamatr/GoBlogify/helpers"
 	"github.com/hutamatr/GoBlogify/post"
+	"github.com/hutamatr/GoBlogify/post_image"
 	"github.com/hutamatr/GoBlogify/role"
 	"github.com/hutamatr/GoBlogify/user"
 	"github.com/stretchr/testify/assert"
 )
+
+//go:embed test.webp
+var testImage []byte
 
 func createCategoryTestPost(db *sql.DB) category.Category {
 	ctx := context.Background()
@@ -41,16 +48,23 @@ func TestCreatePost(t *testing.T) {
 	user, accessToken := createUserTestUser(db)
 
 	t.Run("success create post", func(t *testing.T) {
-		postBody := strings.NewReader(`{
-			"title": "post-1",
-			"body": "body-1",
-			"user_id": ` + strconv.Itoa(user.Id) + `,
-			"published": true,
-			"category_id": ` + strconv.Itoa(category.Id) + `
-		}`)
+		body := new(bytes.Buffer)
+		writer := multipart.NewWriter(body)
 
-		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/v1/posts", postBody)
-		request.Header.Add("Content-Type", "application/json")
+		writer.WriteField("title", "post-1")
+		writer.WriteField("post_body", "body-1")
+		writer.WriteField("published", "true")
+		writer.WriteField("user_id", strconv.Itoa(user.Id))
+		writer.WriteField("category_id", strconv.Itoa(category.Id))
+
+		AddFile(t, writer, "attachment", "test.webp")
+		AddFile(t, writer, "attachment", "test.webp")
+		AddFile(t, writer, "attachment", "test.webp")
+
+		writer.Close()
+
+		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/v1/posts", body)
+		request.Header.Add("Content-Type", writer.FormDataContentType())
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
@@ -61,32 +75,39 @@ func TestCreatePost(t *testing.T) {
 
 		assert.Equal(t, http.StatusCreated, response.StatusCode)
 
-		body, err := io.ReadAll(response.Body)
+		bodyRes, err := io.ReadAll(response.Body)
 
 		var responseBody helpers.ResponseJSON
 
-		json.Unmarshal(body, &responseBody)
+		json.Unmarshal(bodyRes, &responseBody)
 
 		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusCreated, responseBody.Code)
 		assert.Equal(t, "CREATED", responseBody.Status)
 		assert.Equal(t, "post-1", responseBody.Data.(map[string]interface{})["title"])
-		assert.Equal(t, "body-1", responseBody.Data.(map[string]interface{})["body"])
+		assert.Equal(t, "body-1", responseBody.Data.(map[string]interface{})["post_body"])
 		assert.Equal(t, true, responseBody.Data.(map[string]interface{})["published"])
 	})
 
 	t.Run("bad request create post", func(t *testing.T) {
-		postBody := strings.NewReader(`{
-			"title": "",
-			"body": "body-1",
-			"user_id": ` + strconv.Itoa(user.Id) + `,
-			"published": true,
-			"category_id": ` + strconv.Itoa(category.Id) + `
-		}`)
+		body := new(bytes.Buffer)
+		writer := multipart.NewWriter(body)
 
-		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/v1/posts", postBody)
-		request.Header.Add("Content-Type", "application/json")
+		writer.WriteField("title", "")
+		writer.WriteField("post_body", "")
+		writer.WriteField("published", "true")
+		writer.WriteField("user_id", strconv.Itoa(user.Id))
+		writer.WriteField("category_id", strconv.Itoa(category.Id))
+
+		AddFile(t, writer, "attachment", "test.webp")
+		AddFile(t, writer, "attachment", "test.webp")
+		AddFile(t, writer, "attachment", "test.webp")
+
+		writer.Close()
+
+		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/v1/posts", body)
+		request.Header.Add("Content-Type", writer.FormDataContentType())
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
@@ -97,11 +118,11 @@ func TestCreatePost(t *testing.T) {
 
 		assert.Equal(t, http.StatusBadRequest, response.StatusCode)
 
-		body, err := io.ReadAll(response.Body)
+		bodyRes, err := io.ReadAll(response.Body)
 
 		var responseBody helpers.ErrorResponseJSON
 
-		json.Unmarshal(body, &responseBody)
+		json.Unmarshal(bodyRes, &responseBody)
 
 		helpers.PanicError(err, "failed to read response body")
 
@@ -124,13 +145,34 @@ func TestFindAllPostByUser(t *testing.T) {
 		tx, err := db.Begin()
 		helpers.PanicError(err, "failed to begin transaction")
 
+		files := []string{"test.webp", "test.webp", "test.webp"}
+		var imageUrls []string
+
+		for _, file := range files {
+			imageUrl, err := helpers.UploadToCloudinary(file, "test.webp")
+			assert.NoError(t, err)
+
+			imageUrls = append(imageUrls, imageUrl)
+		}
+
 		postRepository := post.NewPostRepository()
-		post := postRepository.Save(ctx, tx, post.Post{
-			Title:       "Post-3",
-			Body:        "Body-3",
+		postCreated := postRepository.Save(ctx, tx, post.Post{
+			Title:       "Post5",
+			Post_Body:   "Body5",
 			User_Id:     user.Id,
 			Published:   true,
 			Category_Id: category.Id,
+		})
+
+		postImageRepository := post_image.NewPostImageRepository()
+		postImageRepository.Save(ctx, tx, post_image.PostImage{
+			Post_Id:      postCreated.Id,
+			Image_1:      imageUrls[0],
+			Image_Name_1: "test.web",
+			Image_2:      imageUrls[1],
+			Image_Name_2: "test.webp",
+			Image_3:      imageUrls[2],
+			Image_Name_3: "test.webp",
 		})
 
 		tx.Commit()
@@ -157,7 +199,7 @@ func TestFindAllPostByUser(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, responseBody.Code)
 		assert.Equal(t, "OK", responseBody.Status)
-		assert.Equal(t, post.Title, responseBody.Data.(map[string]interface{})["posts"].([]interface{})[0].(map[string]interface{})["title"])
+		assert.Equal(t, postCreated.Title, responseBody.Data.(map[string]interface{})["posts"].([]interface{})[0].(map[string]interface{})["title"])
 	})
 
 	t.Run("empty find all post by user", func(t *testing.T) {
@@ -202,15 +244,35 @@ func TestFindAllPostByFollowed(t *testing.T) {
 		tx, err := db.Begin()
 		helpers.PanicError(err, "failed to begin transaction")
 
+		files := []string{"test.webp", "test.webp", "test.webp"}
+		var imageUrls []string
+
+		for _, file := range files {
+			imageUrl, err := helpers.UploadToCloudinary(file, "test.webp")
+			assert.NoError(t, err)
+
+			imageUrls = append(imageUrls, imageUrl)
+		}
+
 		postRepository := post.NewPostRepository()
-		post := postRepository.Save(ctx, tx, post.Post{
-			Title:       "Post-3",
-			Body:        "Body-3",
+		postCreated := postRepository.Save(ctx, tx, post.Post{
+			Title:       "Post5",
+			Post_Body:   "Body5",
 			User_Id:     newUser1.Id,
 			Published:   true,
 			Category_Id: category.Id,
 		})
 
+		postImageRepository := post_image.NewPostImageRepository()
+		postImageRepository.Save(ctx, tx, post_image.PostImage{
+			Post_Id:      postCreated.Id,
+			Image_1:      imageUrls[0],
+			Image_Name_1: "test.web",
+			Image_2:      imageUrls[1],
+			Image_Name_2: "test.webp",
+			Image_3:      imageUrls[2],
+			Image_Name_3: "test.webp",
+		})
 		tx.Commit()
 
 		userRepository := user.NewUserRepository()
@@ -242,8 +304,8 @@ func TestFindAllPostByFollowed(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, responseBody.Code)
 		assert.Equal(t, "OK", responseBody.Status)
-		assert.Equal(t, post.Title, responseBody.Data.(map[string]interface{})["posts"].([]interface{})[0].(map[string]interface{})["title"])
-		assert.Equal(t, post.Body, responseBody.Data.(map[string]interface{})["posts"].([]interface{})[0].(map[string]interface{})["body"])
+		assert.Equal(t, postCreated.Title, responseBody.Data.(map[string]interface{})["posts"].([]interface{})[0].(map[string]interface{})["title"])
+		assert.Equal(t, postCreated.Post_Body, responseBody.Data.(map[string]interface{})["posts"].([]interface{})[0].(map[string]interface{})["post_body"])
 	})
 
 	t.Run("not found find all post by followed", func(t *testing.T) {
@@ -286,18 +348,39 @@ func TestFindPostById(t *testing.T) {
 		tx, err := db.Begin()
 		helpers.PanicError(err, "failed to begin transaction")
 
+		files := []string{"test.webp", "test.webp", "test.webp"}
+		var imageUrls []string
+
+		for _, file := range files {
+			imageUrl, err := helpers.UploadToCloudinary(file, "test.webp")
+			assert.NoError(t, err)
+
+			imageUrls = append(imageUrls, imageUrl)
+		}
+
 		postRepository := post.NewPostRepository()
-		post := postRepository.Save(ctx, tx, post.Post{
-			Title:       "Post-4",
-			Body:        "Body-4",
+		postCreated := postRepository.Save(ctx, tx, post.Post{
+			Title:       "Post5",
+			Post_Body:   "Body5",
 			User_Id:     user.Id,
 			Published:   true,
 			Category_Id: category.Id,
 		})
 
+		postImageRepository := post_image.NewPostImageRepository()
+		postImageRepository.Save(ctx, tx, post_image.PostImage{
+			Post_Id:      postCreated.Id,
+			Image_1:      imageUrls[0],
+			Image_Name_1: "test.web",
+			Image_2:      imageUrls[1],
+			Image_Name_2: "test.webp",
+			Image_3:      imageUrls[2],
+			Image_Name_3: "test.webp",
+		})
+
 		tx.Commit()
 
-		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/v1/post/"+strconv.Itoa(post.Id), nil)
+		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/v1/post/"+strconv.Itoa(postCreated.Id), nil)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -319,11 +402,11 @@ func TestFindPostById(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, responseBody.Code)
 		assert.Equal(t, "OK", responseBody.Status)
-		assert.Equal(t, post.Title, responseBody.Data.(map[string]interface{})["title"])
+		assert.Equal(t, postCreated.Title, responseBody.Data.(map[string]interface{})["title"])
 	})
 
 	t.Run("not found find post by id", func(t *testing.T) {
-		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/v1/post/1", nil)
+		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/api/v1/post/100", nil)
 		request.Header.Add("Content-Type", "application/json")
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
@@ -363,27 +446,58 @@ func TestUpdatePost(t *testing.T) {
 		tx, err := db.Begin()
 		helpers.PanicError(err, "failed to begin transaction")
 
+		files := []string{"test.webp", "test.webp", "test.webp"}
+		var imageUrls []string
+
+		for _, file := range files {
+			imageUrl, err := helpers.UploadToCloudinary(file, "test.webp")
+			assert.NoError(t, err)
+
+			imageUrls = append(imageUrls, imageUrl)
+		}
+
 		postRepository := post.NewPostRepository()
-		post := postRepository.Save(ctx, tx, post.Post{
-			Title:       "Post-5",
-			Body:        "Body-5",
+		postCreated := postRepository.Save(ctx, tx, post.Post{
+			Title:       "Post5",
+			Post_Body:   "Body5",
 			User_Id:     user.Id,
 			Published:   true,
 			Category_Id: category.Id,
 		})
 
+		postImageRepository := post_image.NewPostImageRepository()
+		postImageRepository.Save(ctx, tx, post_image.PostImage{
+			Post_Id:      postCreated.Id,
+			Image_1:      imageUrls[0],
+			Image_Name_1: "test.web",
+			Image_2:      imageUrls[1],
+			Image_Name_2: "test.webp",
+			Image_3:      imageUrls[2],
+			Image_Name_3: "test.webp",
+		})
+
 		tx.Commit()
 
-		postBody := strings.NewReader(`{
-			"title" : "post-1",
-			"body" : "body-1",
-			"user_id" : ` + strconv.Itoa(user.Id) + `,
-			"published" : true,
-			"category_id" : ` + strconv.Itoa(category.Id) + `
-		}`)
+		body := new(bytes.Buffer)
+		writer := multipart.NewWriter(body)
+		// fileImg, err := writer.CreateFormFile("file", "test.webp")
+		// assert.Nil(t, err)
+		// fileImg.Write(testImage)
 
-		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/v1/posts/"+strconv.Itoa(post.Id), postBody)
-		request.Header.Add("Content-Type", "application/json")
+		writer.WriteField("title", "post1")
+		writer.WriteField("post_body", "body1")
+		writer.WriteField("published", "true")
+		writer.WriteField("user_id", strconv.Itoa(user.Id))
+		writer.WriteField("category_id", strconv.Itoa(category.Id))
+
+		AddFile(t, writer, "attachment", "test.webp")
+		AddFile(t, writer, "attachment", "test.webp")
+		AddFile(t, writer, "attachment", "test.webp")
+
+		writer.Close()
+
+		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/v1/posts/"+strconv.Itoa(postCreated.Id), body)
+		request.Header.Add("Content-Type", writer.FormDataContentType())
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
@@ -394,33 +508,40 @@ func TestUpdatePost(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, response.StatusCode)
 
-		body, err := io.ReadAll(response.Body)
+		bodyRes, err := io.ReadAll(response.Body)
 
 		var responseBody helpers.ResponseJSON
 
-		json.Unmarshal(body, &responseBody)
+		json.Unmarshal(bodyRes, &responseBody)
 
 		helpers.PanicError(err, "failed to read response body")
 
 		assert.Equal(t, http.StatusOK, responseBody.Code)
 		assert.Equal(t, "UPDATED", responseBody.Status)
-		assert.Equal(t, "post-1", responseBody.Data.(map[string]interface{})["title"])
-		assert.Equal(t, "body-1", responseBody.Data.(map[string]interface{})["body"])
+		assert.Equal(t, "post1", responseBody.Data.(map[string]interface{})["title"])
+		assert.Equal(t, "body1", responseBody.Data.(map[string]interface{})["post_body"])
 
 	})
 
 	t.Run("not found update post", func(t *testing.T) {
 
-		postBody := strings.NewReader(`{
-			"title" : "post-1",
-			"body" : "body-1",
-			"user_id" : ` + strconv.Itoa(user.Id) + `,
-			"published" : true,
-			"category_id" : ` + strconv.Itoa(category.Id) + `
-		}`)
+		body := new(bytes.Buffer)
+		writer := multipart.NewWriter(body)
 
-		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/v1/posts/1", postBody)
-		request.Header.Add("Content-Type", "application/json")
+		writer.WriteField("title", "post-1")
+		writer.WriteField("post_body", "body-1")
+		writer.WriteField("published", "true")
+		writer.WriteField("user_id", strconv.Itoa(user.Id))
+		writer.WriteField("category_id", strconv.Itoa(category.Id))
+
+		AddFile(t, writer, "attachment", "test.webp")
+		AddFile(t, writer, "attachment", "test.webp")
+		AddFile(t, writer, "attachment", "test.webp")
+
+		writer.Close()
+
+		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/v1/posts/1", body)
+		request.Header.Add("Content-Type", writer.FormDataContentType())
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
@@ -431,11 +552,11 @@ func TestUpdatePost(t *testing.T) {
 
 		assert.Equal(t, http.StatusNotFound, response.StatusCode)
 
-		body, err := io.ReadAll(response.Body)
+		bodyRes, err := io.ReadAll(response.Body)
 
 		var responseBody helpers.ErrorResponseJSON
 
-		json.Unmarshal(body, &responseBody)
+		json.Unmarshal(bodyRes, &responseBody)
 
 		helpers.PanicError(err, "failed to read response body")
 
@@ -449,27 +570,54 @@ func TestUpdatePost(t *testing.T) {
 		tx, err := db.Begin()
 		helpers.PanicError(err, "failed to begin transaction")
 
+		files := []string{"test.webp", "test.webp", "test.webp"}
+		var imageUrls []string
+
+		for _, file := range files {
+			imageUrl, err := helpers.UploadToCloudinary(file, "test.webp")
+			assert.NoError(t, err)
+
+			imageUrls = append(imageUrls, imageUrl)
+		}
+
 		postRepository := post.NewPostRepository()
-		post := postRepository.Save(ctx, tx, post.Post{
-			Title:       "Post-5",
-			Body:        "Body-5",
+		postCreated := postRepository.Save(ctx, tx, post.Post{
+			Title:       "Post5",
+			Post_Body:   "Body5",
 			User_Id:     user.Id,
 			Published:   true,
 			Category_Id: category.Id,
 		})
 
+		postImageRepository := post_image.NewPostImageRepository()
+		postImageRepository.Save(ctx, tx, post_image.PostImage{
+			Post_Id:      postCreated.Id,
+			Image_1:      imageUrls[0],
+			Image_Name_1: "test.web",
+			Image_2:      imageUrls[1],
+			Image_Name_2: "test.webp",
+			Image_3:      imageUrls[2],
+			Image_Name_3: "test.webp",
+		})
+
 		tx.Commit()
 
-		postBody := strings.NewReader(`{
-			"title" : "",
-			"body" : "body-1",
-			"author" : "author-1",
-			"published" : true,
-			"category_id" : ` + strconv.Itoa(category.Id) + `
-		}`)
+		body := new(bytes.Buffer)
+		writer := multipart.NewWriter(body)
+		fileImg, err := writer.CreateFormFile("file", "test.webp")
+		assert.Nil(t, err)
+		fileImg.Write(testImage)
 
-		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/v1/posts/"+strconv.Itoa(post.Id), postBody)
-		request.Header.Add("Content-Type", "application/json")
+		writer.WriteField("title", "")
+		writer.WriteField("post_body", "body1")
+		writer.WriteField("published", "true")
+		writer.WriteField("user_id", strconv.Itoa(user.Id))
+		writer.WriteField("category_id", strconv.Itoa(category.Id))
+
+		writer.Close()
+
+		request := httptest.NewRequest(http.MethodPut, "http://localhost:8080/api/v1/posts/"+strconv.Itoa(postCreated.Id), body)
+		request.Header.Add("Content-Type", writer.FormDataContentType())
 		request.Header.Add("Authorization", "Bearer "+accessToken)
 
 		recorder := httptest.NewRecorder()
@@ -480,11 +628,11 @@ func TestUpdatePost(t *testing.T) {
 
 		assert.Equal(t, http.StatusBadRequest, response.StatusCode)
 
-		body, err := io.ReadAll(response.Body)
+		bodyRes, err := io.ReadAll(response.Body)
 
 		var responseBody helpers.ErrorResponseJSON
 
-		json.Unmarshal(body, &responseBody)
+		json.Unmarshal(bodyRes, &responseBody)
 
 		helpers.PanicError(err, "failed to read response body")
 
@@ -511,7 +659,7 @@ func TestDeletePost(t *testing.T) {
 		postRepository := post.NewPostRepository()
 		post := postRepository.Save(ctx, tx, post.Post{
 			Title:       "Post-5",
-			Body:        "Body-5",
+			Post_Body:   "Body-5",
 			User_Id:     user.Id,
 			Published:   true,
 			Category_Id: category.Id,
