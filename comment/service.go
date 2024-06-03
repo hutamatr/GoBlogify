@@ -42,7 +42,7 @@ func (service *CommentServiceImpl) Create(ctx context.Context, request CommentCr
 	newComment := Comment{
 		Post_Id: request.Post_Id,
 		User_Id: request.User_Id,
-		Content: request.Content,
+		Comment: request.Comment,
 	}
 
 	createdComment := service.repository.Save(ctx, tx, newComment)
@@ -93,7 +93,7 @@ func (service *CommentServiceImpl) Update(ctx context.Context, request CommentUp
 
 	updatedCommentData := Comment{
 		Id:      request.Id,
-		Content: request.Content,
+		Comment: request.Comment,
 	}
 
 	updatedComment := service.repository.Update(ctx, tx, updatedCommentData)

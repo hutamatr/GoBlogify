@@ -10,7 +10,7 @@ type Comment struct {
 	Id         int
 	Post_Id    int
 	User_Id    int
-	Content    string
+	Comment    string
 	Created_At time.Time
 	Updated_At time.Time
 }
@@ -19,14 +19,14 @@ type CommentCreateOrUpdate struct {
 	Id      int
 	Post_Id int
 	User_Id int
-	Content string
+	Comment string
 }
 
 type CommentJoin struct {
 	Id         int
 	Post_Id    int
 	User_Id    int
-	Content    string
+	Comment    string
 	Created_At time.Time
 	Updated_At time.Time
 	User       user.User

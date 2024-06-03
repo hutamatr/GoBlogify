@@ -26,7 +26,7 @@ func NewUserRepository() UserRepository {
 }
 
 func (repository *UserRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, user User) UserJoin {
-	queryInsert := "INSERT INTO user(username, email, password, role_id) VALUES (?, ?, ?, ?)"
+	queryInsert := "INSERT INTO users(username, email, password, role_id) VALUES (?, ?, ?, ?)"
 
 	result, err := tx.ExecContext(ctx, queryInsert, user.Username, user.Email, user.Password, user.Role_Id)
 
@@ -43,9 +43,9 @@ func (repository *UserRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, user
 
 func (repository *UserRepositoryImpl) FindAll(ctx context.Context, tx *sql.Tx) []UserJoin {
 	query := `SELECT u.id, u.username, u.email, u.first_name, u.last_name, u.role_id, u.created_at, u.updated_at, u.deleted_at,
-	(SELECT COUNT(*) FROM follow f WHERE f.followed_id = u.id) AS follower_count,
-	(SELECT COUNT(*) FROM follow f WHERE f.follower_id = u.id) AS following_count
-	FROM user u WHERE u.is_deleted = false LIMIT 10`
+	(SELECT COUNT(*) FROM follows f WHERE f.followed_id = u.id) AS follower_count,
+	(SELECT COUNT(*) FROM follows f WHERE f.follower_id = u.id) AS following_count
+	FROM users u WHERE u.is_deleted = false LIMIT 10`
 
 	rows, err := tx.QueryContext(ctx, query)
 
@@ -95,17 +95,17 @@ func (repository *UserRepositoryImpl) FindOne(ctx context.Context, tx *sql.Tx, u
 
 	if userId > 0 {
 		query := `SELECT u.id, u.username, u.email, u.first_name, u.last_name, u.role_id, u.created_at, u.updated_at, u.deleted_at,
-		(SELECT COUNT(*) FROM follow f WHERE f.followed_id = u.id) AS follower_count,
-		(SELECT COUNT(*) FROM follow f WHERE f.follower_id = u.id) AS following_count
-		FROM user u WHERE u.id = ? AND u.is_deleted = false`
+		(SELECT COUNT(*) FROM follows f WHERE f.followed_id = u.id) AS follower_count,
+		(SELECT COUNT(*) FROM follows f WHERE f.follower_id = u.id) AS following_count
+		FROM users u WHERE u.id = ? AND u.is_deleted = false`
 
 		rows, err = tx.QueryContext(ctx, query, userId)
 		helpers.PanicError(err, "failed to query one user")
 	} else if email != "" {
 		query := `SELECT u.id, u.username, u.email, u.first_name, u.last_name, u.role_id, u.created_at, u.updated_at, u.deleted_at,
-		(SELECT COUNT(*) FROM follow f WHERE f.followed_id = u.id) AS follower_count,
-		(SELECT COUNT(*) FROM follow f WHERE f.follower_id = u.id) AS following_count
-		FROM user u WHERE u.email = ? AND u.is_deleted = false`
+		(SELECT COUNT(*) FROM follows f WHERE f.followed_id = u.id) AS follower_count,
+		(SELECT COUNT(*) FROM follows f WHERE f.follower_id = u.id) AS following_count
+		FROM users u WHERE u.email = ? AND u.is_deleted = false`
 
 		rows, err = tx.QueryContext(ctx, query, email)
 		helpers.PanicError(err, "failed to query one user")
@@ -154,11 +154,11 @@ func (repository *UserRepositoryImpl) Update(ctx context.Context, tx *sql.Tx, us
 	var err error
 
 	if user.Id > 0 {
-		query := "UPDATE user SET username = ?, first_name = ?, last_name = ? WHERE id = ? AND is_deleted = false"
+		query := "UPDATE users SET username = ?, first_name = ?, last_name = ? WHERE id = ? AND is_deleted = false"
 		result, err = tx.ExecContext(ctx, query, user.Username, user.First_Name, user.Last_Name, user.Id)
 		helpers.PanicError(err, "failed to exec query update user")
 	} else if user.Email != "" {
-		query := "UPDATE user SET username = ?, first_name = ?, last_name = ? WHERE email = ? AND is_deleted = false"
+		query := "UPDATE users SET username = ?, first_name = ?, last_name = ? WHERE email = ? AND is_deleted = false"
 		result, err = tx.ExecContext(ctx, query, user.Username, user.First_Name, user.Last_Name, user.Email)
 		helpers.PanicError(err, "failed to exec query update user")
 	}
@@ -173,13 +173,13 @@ func (repository *UserRepositoryImpl) Update(ctx context.Context, tx *sql.Tx, us
 }
 
 func (repository *UserRepositoryImpl) Delete(ctx context.Context, tx *sql.Tx, userId int) {
-	query := "UPDATE user SET deleted_at = NOW(), is_deleted = true WHERE id = ?"
+	query := "UPDATE users SET deleted_at = NOW(), is_deleted = true WHERE id = ?"
 	_, err := tx.ExecContext(ctx, query, userId)
 	helpers.PanicError(err, "failed to exec query delete user")
 }
 
 func (repository *UserRepositoryImpl) FindPassword(ctx context.Context, tx *sql.Tx, email string) string {
-	query := "SELECT password FROM user WHERE email = ? AND is_deleted = false"
+	query := "SELECT password FROM users WHERE email = ? AND is_deleted = false"
 	rows, err := tx.QueryContext(ctx, query, email)
 	helpers.PanicError(err, "failed to query password user")
 

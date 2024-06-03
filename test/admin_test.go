@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -116,15 +115,13 @@ func TestLoginAdmin(t *testing.T) {
 	defer db.Close()
 
 	admin, _ := createAdminTestAdmin(db)
-	fmt.Println("running")
-
-	fmt.Println("admin", admin)
 
 	t.Run("success login admin", func(t *testing.T) {
 		accountBody := strings.NewReader(`{
 			"email": "admin@example.com",
 			"password": "Admin123!"
 		}`)
+		
 
 		request := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/v1/signin-admin", accountBody)
 		request.Header.Add("Content-Type", "application/json")

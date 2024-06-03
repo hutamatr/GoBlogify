@@ -4,8 +4,225 @@
     "title": "API Title",
     "version": "1.0"
   },
-  "servers": [{ "url": "http://localhost:8080/api" }],
+  "servers": [{ "url": "http://localhost:8080/api/v1" }],
   "paths": {
+    "/signup-admin": {
+      "post": {
+        "tags": ["Admin API"],
+        "description": "Create an admin account",
+        "summary": "Create an admin account",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignUpAdminRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Admin created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 201
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "CREATED"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "admin": {
+                          "$ref": "#/components/schemas/Admin"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/signin-admin": {
+      "post": {
+        "tags": ["Admin API"],
+        "description": "Sign in an admin account",
+        "summary": "Sign in an admin account",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignInAdminRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sign in an admin account successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "OK"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "admin": {
+                          "$ref": "#/components/schemas/Admin"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/signup": {
+      "post": {
+        "tags": ["Users API"],
+        "description": "Create an user account",
+        "summary": "Create an user account",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignUpUserRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 201
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "CREATED"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "user": {
+                          "$ref": "#/components/schemas/User"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/signin": {
+      "post": {
+        "tags": ["Users API"],
+        "description": "Sign in an user account",
+        "summary": "Sign in an user account",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignInUserRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sign in an user account successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "OK"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "user": {
+                          "$ref": "#/components/schemas/User"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/signout": {
+      "post": {
+        "tags": ["Users API"],
+        "description": "Sign out an user account",
+        "summary": "Sign out an user account",
+        "responses": {
+          "200": {
+            "description": "Sign out an user account successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "OK"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/post": {
       "get": {
         "tags": ["Posts API"],
@@ -423,6 +640,78 @@
   },
   "components": {
     "schemas": {
+      "SignUpAdminRequest": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "example": "admin"
+          },
+          "email": {
+            "type": "string",
+            "example": "admin@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "password"
+          },
+          "confirm_password": {
+            "type": "string",
+            "example": "password"
+          },
+          "admin_code": {
+            "type": "string",
+            "example": "admin_code"
+          }
+        }
+      },
+      "SignUpUserRequest": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "example": "user"
+          },
+          "email": {
+            "type": "string",
+            "example": "user@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "password"
+          },
+          "confirm_password": {
+            "type": "string",
+            "example": "password"
+          }
+        }
+      },
+      "SignInAdminRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "admin@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "password"
+          }
+        }
+      },
+      "SignInUserRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "user@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "password"
+          }
+        }
+      },
       "PostRequest": {
         "type": "object",
         "properties": {
@@ -454,6 +743,88 @@
           "name": {
             "type": "string",
             "example": "Category Name"
+          }
+        }
+      },
+      "Admin": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "username": {
+            "type": "string",
+            "example": "admin"
+          },
+          "email": {
+            "type": "string",
+            "example": "admin@example.com"
+          },
+          "first_name": {
+            "type": "string",
+            "example": "John"
+          },
+          "last_name": {
+            "type": "string",
+            "example": "Doe"
+          },
+          "created_at": {
+            "type": "string",
+            "example": "2022-01-01T00:00:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "example": "2022-01-01T00:00:00Z"
+          },
+          "deleted_at": {
+            "type": "string",
+            "example": "2022-01-01T00:00:00Z"
+          },
+          "deleted": {
+            "type": "boolean",
+            "example": false
+          }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "username": {
+            "type": "string",
+            "example": "user"
+          },
+          "email": {
+            "type": "string",
+            "example": "user@example.com"
+          },
+          "first_name": {
+            "type": "string",
+            "example": "John"
+          },
+          "last_name": {
+            "type": "string",
+            "example": "Doe"
+          },
+          "created_at": {
+            "type": "string",
+            "example": "2022-01-01T00:00:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "example": "2022-01-01T00:00:00Z"
+          },
+          "deleted_at": {
+            "type": "string",
+            "example": "2022-01-01T00:00:00Z"
+          },
+          "deleted": {
+            "type": "boolean",
+            "example": false
           }
         }
       },

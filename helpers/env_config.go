@@ -29,11 +29,19 @@ type Auth struct {
 	AdminCode string
 }
 
+type Cloudinary struct {
+	CloudName   string
+	ApiKey      string
+	ApiSecret   string
+	AssetFolder string
+}
+
 type Env struct {
 	App         *App
 	DB          *DB
 	SecretToken *SecretToken
 	Auth        *Auth
+	Cloudinary  *Cloudinary
 }
 
 func init() {
@@ -70,6 +78,12 @@ func NewEnv() *Env {
 		},
 		Auth: &Auth{
 			AdminCode: os.Getenv("ADMIN_CODE"),
+		},
+		Cloudinary: &Cloudinary{
+			CloudName:   os.Getenv("CLOUDINARY_CLOUD_NAME"),
+			ApiKey:      os.Getenv("CLOUDINARY_API_KEY"),
+			ApiSecret:   os.Getenv("CLOUDINARY_API_SECRET"),
+			AssetFolder: os.Getenv("CLOUDINARY_ASSET_FOLDER"),
 		},
 	}
 }

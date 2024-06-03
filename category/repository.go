@@ -25,7 +25,7 @@ func NewCategoryRepository() CategoryRepository {
 }
 
 func (repository *CategoryRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, category Category) Category {
-	queryInsert := "INSERT INTO category(name) VALUES(?)"
+	queryInsert := "INSERT INTO categories(name) VALUES(?)"
 
 	result, err := tx.ExecContext(ctx, queryInsert, category.Name)
 
@@ -41,7 +41,7 @@ func (repository *CategoryRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, 
 }
 
 func (repository *CategoryRepositoryImpl) FindAll(ctx context.Context, tx *sql.Tx, limit, offset int) []Category {
-	query := "SELECT id, name, created_at, updated_at FROM category LIMIT ? OFFSET ?"
+	query := "SELECT id, name, created_at, updated_at FROM categories LIMIT ? OFFSET ?"
 
 	rows, err := tx.QueryContext(ctx, query, limit, offset)
 
@@ -63,7 +63,7 @@ func (repository *CategoryRepositoryImpl) FindAll(ctx context.Context, tx *sql.T
 }
 
 func (repository *CategoryRepositoryImpl) FindById(ctx context.Context, tx *sql.Tx, categoryId int) Category {
-	query := "SELECT id, name, created_at, updated_at FROM category WHERE id = ?"
+	query := "SELECT id, name, created_at, updated_at FROM categories WHERE id = ?"
 
 	rows, err := tx.QueryContext(ctx, query, categoryId)
 
@@ -85,7 +85,7 @@ func (repository *CategoryRepositoryImpl) FindById(ctx context.Context, tx *sql.
 }
 
 func (repository *CategoryRepositoryImpl) Update(ctx context.Context, tx *sql.Tx, category Category) Category {
-	query := "UPDATE category SET name = ? WHERE id = ?"
+	query := "UPDATE categories SET name = ? WHERE id = ?"
 
 	_, err := tx.ExecContext(ctx, query, category.Name, category.Id)
 
@@ -97,7 +97,7 @@ func (repository *CategoryRepositoryImpl) Update(ctx context.Context, tx *sql.Tx
 }
 
 func (repository *CategoryRepositoryImpl) Delete(ctx context.Context, tx *sql.Tx, categoryId int) {
-	query := "DELETE FROM category WHERE id = ?"
+	query := "DELETE FROM categories WHERE id = ?"
 
 	result, err := tx.ExecContext(ctx, query, categoryId)
 
@@ -113,7 +113,7 @@ func (repository *CategoryRepositoryImpl) Delete(ctx context.Context, tx *sql.Tx
 }
 
 func (repository *CategoryRepositoryImpl) CountCategories(ctx context.Context, tx *sql.Tx) int {
-	query := "SELECT COUNT(*) FROM category"
+	query := "SELECT COUNT(*) FROM categories"
 
 	rows, err := tx.QueryContext(ctx, query)
 

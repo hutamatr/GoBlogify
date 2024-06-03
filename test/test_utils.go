@@ -3,7 +3,11 @@ package test
 import (
 	"database/sql"
 	"fmt"
+	"io"
+	"mime/multipart"
 	"net/http"
+	"os"
+	"testing"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -41,18 +45,20 @@ func ConnectDBTest() *sql.DB {
 }
 
 func DeleteDBTest(db *sql.DB) {
-	_, err := db.Exec("DELETE FROM comment")
+	_, err := db.Exec("DELETE FROM comments")
 	helpers.PanicError(err, "failed to delete comment")
-	_, err = db.Exec("DELETE FROM post")
-	helpers.PanicError(err, "failed to delete post")
-	_, err = db.Exec("DELETE FROM category")
-	helpers.PanicError(err, "failed to delete category")
-	_, err = db.Exec("DELETE FROM follow")
-	helpers.PanicError(err, "failed to delete follow")
-	_, err = db.Exec("DELETE FROM user")
-	helpers.PanicError(err, "failed to delete user")
-	_, err = db.Exec("DELETE FROM role")
-	helpers.PanicError(err, "failed to delete role")
+	_, err = db.Exec("DELETE FROM post_images")
+	helpers.PanicError(err, "failed to delete post_images")
+	_, err = db.Exec("DELETE FROM posts")
+	helpers.PanicError(err, "failed to delete posts")
+	_, err = db.Exec("DELETE FROM categories")
+	helpers.PanicError(err, "failed to delete categories")
+	_, err = db.Exec("DELETE FROM follows")
+	helpers.PanicError(err, "failed to delete follows")
+	_, err = db.Exec("DELETE FROM users")
+	helpers.PanicError(err, "failed to delete users")
+	_, err = db.Exec("DELETE FROM roles")
+	helpers.PanicError(err, "failed to delete roles")
 }
 
 func SetupRouterTest(db *sql.DB) http.Handler {
@@ -77,4 +83,22 @@ func SetupRouterTest(db *sql.DB) http.Handler {
 	})
 
 	return middleware.NewAuthMiddleware(router)
+}
+
+func AddFile(t *testing.T, w *multipart.Writer, fieldName, fileName string) {
+	file, err := os.Open(fileName)
+	if err != nil {
+		t.Fatalf("Unable to open file %s: %v", fileName, err)
+	}
+	defer file.Close()
+
+	fw, err := w.CreateFormFile(fieldName, fileName)
+	if err != nil {
+		t.Fatalf("Error creating form file: %v", err)
+	}
+
+	_, err = io.Copy(fw, file)
+	if err != nil {
+		t.Fatalf("Error copying file: %v", err)
+	}
 }

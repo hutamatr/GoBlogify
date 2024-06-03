@@ -26,7 +26,7 @@ func createPostTestComment(db *sql.DB, userId int, categoryId int) post.PostJoin
 	postRepository := post.NewPostRepository()
 	post := postRepository.Save(ctx, tx, post.Post{
 		Title:       "Post-1",
-		Body:        "Body-1",
+		Post_Body:   "Body-1",
 		Published:   true,
 		User_Id:     userId,
 		Category_Id: categoryId,
@@ -47,7 +47,7 @@ func TestCreateComment(t *testing.T) {
 
 	t.Run("success create comment", func(t *testing.T) {
 		commentBody := strings.NewReader(`{
-			"content": "comment-1",
+			"comment": "comment-1",
 			"user_id": ` + strconv.Itoa(user.Id) + `,
 			"post_id": ` + strconv.Itoa(post.Id) + `
 		}`)
@@ -74,14 +74,14 @@ func TestCreateComment(t *testing.T) {
 
 		assert.Equal(t, http.StatusCreated, responseBody.Code)
 		assert.Equal(t, "CREATED", responseBody.Status)
-		assert.Equal(t, "comment-1", responseBody.Data.(map[string]interface{})["content"])
+		assert.Equal(t, "comment-1", responseBody.Data.(map[string]interface{})["comment"])
 		assert.Equal(t, post.Id, int(responseBody.Data.(map[string]interface{})["post_id"].(float64)))
 		assert.Equal(t, user.Id, int(responseBody.Data.(map[string]interface{})["user_id"].(float64)))
 	})
 
 	t.Run("bad request create comment", func(t *testing.T) {
 		commentBody := strings.NewReader(`{
-			"content": "",
+			"comment": "",
 			"user_id": ` + strconv.Itoa(user.Id) + `,
 			"post_id": ` + strconv.Itoa(post.Id) + `
 		}`)
@@ -128,7 +128,7 @@ func TestFindCommentByPost(t *testing.T) {
 
 		commentRepository := comment.NewCommentRepository()
 		comment := commentRepository.Save(ctx, tx, comment.Comment{
-			Content: "comment-1",
+			Comment: "comment-1",
 			User_Id: user.Id,
 			Post_Id: post.Id,
 		})
@@ -157,7 +157,7 @@ func TestFindCommentByPost(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, responseBody.Code)
 		assert.Equal(t, "OK", responseBody.Status)
-		assert.Equal(t, comment.Content, responseBody.Data.(map[string]interface{})["comments"].([]interface{})[0].(map[string]interface{})["content"])
+		assert.Equal(t, comment.Comment, responseBody.Data.(map[string]interface{})["comments"].([]interface{})[0].(map[string]interface{})["comment"])
 
 	})
 
@@ -206,7 +206,7 @@ func TestFindCommentById(t *testing.T) {
 
 		commentRepository := comment.NewCommentRepository()
 		comment := commentRepository.Save(ctx, tx, comment.Comment{
-			Content: "comment-1",
+			Comment: "comment-1",
 			User_Id: user.Id,
 			Post_Id: post.Id,
 		})
@@ -235,7 +235,7 @@ func TestFindCommentById(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, responseBody.Code)
 		assert.Equal(t, "OK", responseBody.Status)
-		assert.Equal(t, comment.Content, responseBody.Data.(map[string]interface{})["content"])
+		assert.Equal(t, comment.Comment, responseBody.Data.(map[string]interface{})["comment"])
 	})
 
 	t.Run("not found find comment by id", func(t *testing.T) {
@@ -282,7 +282,7 @@ func TestUpdateComment(t *testing.T) {
 
 		commentRepository := comment.NewCommentRepository()
 		comment := commentRepository.Save(ctx, tx, comment.Comment{
-			Content: "comment-1",
+			Comment: "comment-1",
 			User_Id: user.Id,
 			Post_Id: post.Id,
 		})
@@ -290,7 +290,7 @@ func TestUpdateComment(t *testing.T) {
 		tx.Commit()
 
 		commentBody := strings.NewReader(`{
-			"content": "comment-2",
+			"comment": "comment-2",
 			"user_id": ` + strconv.Itoa(user.Id) + `,
 			"post_id": ` + strconv.Itoa(post.Id) + `
 		}`)
@@ -317,12 +317,12 @@ func TestUpdateComment(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, responseBody.Code)
 		assert.Equal(t, "UPDATED", responseBody.Status)
-		assert.Equal(t, "comment-2", responseBody.Data.(map[string]interface{})["content"])
+		assert.Equal(t, "comment-2", responseBody.Data.(map[string]interface{})["comment"])
 	})
 
 	t.Run("not found update comment", func(t *testing.T) {
 		commentBody := strings.NewReader(`{
-			"content": "comment-2",
+			"comment": "comment-2",
 			"user_id": ` + strconv.Itoa(user.Id) + `,
 			"post_id": ` + strconv.Itoa(post.Id) + `
 		}`)
@@ -359,7 +359,7 @@ func TestUpdateComment(t *testing.T) {
 
 		commentRepository := comment.NewCommentRepository()
 		comment := commentRepository.Save(ctx, tx, comment.Comment{
-			Content: "comment-1",
+			Comment: "comment-1",
 			User_Id: user.Id,
 			Post_Id: post.Id,
 		})
@@ -367,7 +367,7 @@ func TestUpdateComment(t *testing.T) {
 		tx.Commit()
 
 		commentBody := strings.NewReader(`{
-			"content": "",
+			"comment": "",
 			"user_id": ` + strconv.Itoa(user.Id) + `,
 			"post_id": ` + strconv.Itoa(post.Id) + `
 		}`)
@@ -415,7 +415,7 @@ func TestDeleteComment(t *testing.T) {
 
 		commentRepository := comment.NewCommentRepository()
 		comment := commentRepository.Save(ctx, tx, comment.Comment{
-			Content: "comment-1",
+			Comment: "comment-1",
 			User_Id: user.Id,
 			Post_Id: post.Id,
 		})
