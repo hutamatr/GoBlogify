@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/hutamatr/GoBlogify/category"
+	"github.com/hutamatr/GoBlogify/post_image"
 	"github.com/hutamatr/GoBlogify/user"
 )
 
@@ -12,7 +13,7 @@ type Post struct {
 	User_Id     int
 	Category_Id int
 	Title       string
-	Body        string
+	Post_Body   string
 	Published   bool
 	Deleted     bool
 	Created_At  time.Time
@@ -25,7 +26,7 @@ type PostCreateOrUpdate struct {
 	User_id     int
 	Category_Id int
 	Title       string
-	Body        string
+	Post_Body   string
 	Published   bool
 	Deleted     bool
 }
@@ -33,7 +34,7 @@ type PostCreateOrUpdate struct {
 type PostJoin struct {
 	Id         int
 	Title      string
-	Body       string
+	Post_Body  string
 	Published  bool
 	Deleted    bool
 	Created_At time.Time
@@ -41,6 +42,7 @@ type PostJoin struct {
 	Deleted_At time.Time
 	User       user.UserJoin
 	Category   category.Category
+	Images     post_image.PostImage
 }
 
 type PostJoinFollowed struct {
@@ -48,11 +50,12 @@ type PostJoinFollowed struct {
 	User_Id     int
 	Category_Id int
 	Title       string
-	Body        string
+	Post_Body   string
 	Published   bool
 	Deleted     bool
 	Created_At  time.Time
 	Updated_At  time.Time
 	Deleted_At  time.Time
 	User        user.UserJoin
+	Images      post_image.PostImage
 }
