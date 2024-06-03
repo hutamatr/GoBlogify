@@ -13,6 +13,7 @@ import (
 	"github.com/hutamatr/GoBlogify/comment"
 	"github.com/hutamatr/GoBlogify/follow"
 	"github.com/hutamatr/GoBlogify/post"
+	"github.com/hutamatr/GoBlogify/post_image"
 	"github.com/hutamatr/GoBlogify/role"
 	"github.com/hutamatr/GoBlogify/user"
 )
@@ -33,7 +34,7 @@ func InitializedAdminController(db *sql.DB, validator *validator.Validate) admin
 }
 
 func InitializedPostController(db *sql.DB, validator *validator.Validate) post.PostController {
-	wire.Build(post.NewPostRepository, post.NewPostService, post.NewPostController)
+	wire.Build(post.NewPostRepository, post.NewPostService, post.NewPostController, post_image.NewPostImageRepository)
 	return nil
 }
 

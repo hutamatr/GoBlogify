@@ -14,6 +14,7 @@ import (
 	"github.com/hutamatr/GoBlogify/comment"
 	"github.com/hutamatr/GoBlogify/follow"
 	"github.com/hutamatr/GoBlogify/post"
+	"github.com/hutamatr/GoBlogify/post_image"
 	"github.com/hutamatr/GoBlogify/role"
 	"github.com/hutamatr/GoBlogify/user"
 )
@@ -45,7 +46,8 @@ func InitializedAdminController(db *sql.DB, validator2 *validator.Validate) admi
 
 func InitializedPostController(db *sql.DB, validator2 *validator.Validate) post.PostController {
 	postRepository := post.NewPostRepository()
-	postService := post.NewPostService(postRepository, db, validator2)
+	postImageRepository := post_image.NewPostImageRepository()
+	postService := post.NewPostService(postRepository, postImageRepository, db, validator2)
 	postController := post.NewPostController(postService)
 	return postController
 }
